@@ -57,6 +57,6 @@ int main() {
 	}else{
 		printf("São diferentes\n");
 	}
-	printf("aaaaa");
+	printf("gozei legal");
 	return 0;
 }	
