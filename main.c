@@ -57,6 +57,6 @@ int main() {
 	}else{
 		printf("São diferentes\n");
 	}
-	
-    return 0;
+	printf("aaaaa");
+	return 0;
 }	
