@@ -13,11 +13,11 @@ int main(int argc, char *argv[]) {
     char escolha;
     int rodando = 1;
 
-    printf("=== BEM-VINDO AO REINO DE C ===\n");
+    printf("=== BEM-VINDO A ILHA DO SUSSA ===\n");
 
     while (rodando) {
         printf("\n-------------------------------\n");
-        printf(" Voce deseja entrar na caverna?\n");
+        printf(" Voce deseja entrar na ilha?\n");
         printf(" [Y] Sim / [N] Nao / [S] Sair\n");
         printf("-------------------------------\n");
         printf("Escolha: ");
