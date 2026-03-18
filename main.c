@@ -1,62 +1,45 @@
+#include <stdlib.h>
 #include <stdio.h>
-#include "pilha.h"
-void preencher_pilha(tp_pilha *p) {
-    int tamanho;
-    printf("Tamanho da pilha");
-    scanf("%d", &tamanho);
-    int valor;
-    for(int i = 0; i < tamanho; i++) {
-        scanf("%d", &valor);
-        if (!push(p, valor)) {
-            printf("Erro: Pilha cheia!\n");
-            break;
-        }
+#include <ctype.h>
+int main(int argc, char *argv[]) {
+    // Verifica se o programa foi aberto com um argumento específico
+    // Se não foi, ele reabre a si mesmo em uma nova janela de CMD
+    if (argc == 1) {
+        char command[256];
+        sprintf(command, "start cmd /k \"%s run\"", argv[0]);
+        system(command);
+        return 0; // Fecha a instância atual (a do terminal do VS Code)
     }
-}
-int comparar_pilhas(tp_pilha *pilha1, tp_pilha *pilha2){
-	tp_pilha armazena1, armazena2;
-	int valor1, valor2;
-	int identicas=1;
-	inicializa_pilha(&armazena1);
-	inicializa_pilha(&armazena2);
-	if(altura_pilha(pilha1)!=altura_pilha(pilha2)){
-		return 0;
-	} 
-	while(!pilha_vazia(pilha1) && !pilha_vazia(pilha2)){
-		pop(pilha1, &valor1);
-		pop(pilha2, &valor2);
-		push(&armazena1, valor1);
-		push(&armazena2, valor2);
-		if(valor1!=valor2){
-			identicas=0;
-			break;
-		}
-	}
-	while(!pilha_vazia(&armazena1) && !pilha_vazia(&armazena2)){
-		pop(&armazena1, &valor1);
-		pop(&armazena2, &valor2);
-		push(pilha1, valor1);
-		push(pilha2, valor2);
-	}
-	return identicas;
-}
+    char escolha;
+    int rodando = 1;
 
-int main() {
-    tp_pilha pilhaum, pilhadois;
-    
-    inicializa_pilha(&pilhaum);
-    inicializa_pilha(&pilhadois);
-    preencher_pilha(&pilhaum);
-    preencher_pilha(&pilhadois);
-    printf("Pilha original1");
-    imprime_pilha(pilhaum);
-    printf("Pilha original2");
-    imprime_pilha(pilhadois);
-	if(comparar_pilhas(&pilhaum, &pilhadois)){
-		printf("São iguais\n");
-	}else{
-		printf("São diferentes\n");
+    printf("=== BEM-VINDO AO REINO DE C ===\n");
+
+    while (rodando) {
+        printf("\n-------------------------------\n");
+        printf(" Voce deseja entrar na caverna?\n");
+        printf(" [Y] Sim / [N] Nao / [S] Sair\n");
+        printf("-------------------------------\n");
+        printf("Escolha: ");
+
+        // Captura o caractere e limpa o buffer do teclado
+        scanf(" %c", &escolha);
+        escolha = tolower(escolha); // Transforma em minúsculo para facilitar
+
+        printf("\n--- RESULTADO ---\n");
+        if (escolha == 'y') {
+            printf(">> Voce entrou na caverna e encontrou um tesouro!\n");
+        } 
+        else if (escolha == 'n') {
+            printf(">> Voce decidiu ficar acampando do lado de fora.\n");
+        } 
+        else if (escolha == 's') {
+            printf(">> Encerrando o programa... Ate logo!\n");
+            rodando = 0;
+        } 
+        else {
+            printf(">> Comando invalido! Tente Y, N ou S.\n");
+        }
 	}
-	printf("gozei legal");
-	return 0;
-}	
+    return 0;
+}
