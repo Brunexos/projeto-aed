@@ -1,45 +1,78 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "jogador.h" // A mágica acontece aqui
+
+#ifdef _WIN32
+    #include <windows.h>
+#endif
+
+void configurarTerminal() {
+#ifdef _WIN32
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dwMode = 0;
+    GetConsoleMode(hOut, &dwMode);
+    dwMode |= 0x0004; // Habilita cores ANSI
+    SetConsoleMode(hOut, dwMode);
+#endif
+}
+
 int main(int argc, char *argv[]) {
-    // Verifica se o programa foi aberto com um argumento específico
-    // Se não foi, ele reabre a si mesmo em uma nova janela de CMD
-    if (argc == 1) {
-        char command[256];
-        sprintf(command, "start cmd /k \"%s run\"", argv[0]);
-        system(command);
-        return 0; // Fecha a instância atual (a do terminal do VS Code)
+    // Lógica para abrir em janela externa (CMD)
+    if (argc == 1 || strcmp(argv[1], "jogo") != 0) {
+        char comando[512];
+        sprintf(comando, "start \"MEU_JOGO\" \"%s\" jogo", argv[0]);
+        system(comando);
+        return 0; 
     }
-    char escolha;
-    int rodando = 1;
 
-    printf("=== BEM-VINDO A ILHA DO SUSSA ===\n");
+    configurarTerminal();
+    srand(time(NULL));
 
-    while (rodando) {
-        printf("\n-------------------------------\n");
-        printf(" Voce deseja entrar na ilha?\n");
-        printf(" [Y] Sim / [N] Nao / [S] Sair\n");
-        printf("-------------------------------\n");
-        printf("Escolha: ");
+    int opcao = 0;
+    Jogador *jogador_da_vez = NULL;
 
-        // Captura o caractere e limpa o buffer do teclado
-        scanf(" %c", &escolha);
-        escolha = tolower(escolha); // Transforma em minúsculo para facilitar
-
-        printf("\n--- RESULTADO ---\n");
-        if (escolha == 'y') {
-            printf(">> Voce entrou na caverna e encontrou um tesouro!\n");
-        } 
-        else if (escolha == 'n') {
-            printf(">> Voce decidiu ficar acampando do lado de fora.\n");
-        } 
-        else if (escolha == 's') {
-            printf(">> Encerrando o programa... Ate logo!\n");
-            rodando = 0;
-        } 
-        else {
-            printf(">> Comando invalido! Tente Y, N ou S.\n");
+    while (opcao != 3) {
+        system("cls");
+        printf("==========================================\n");
+        printf("       JOGO DO CLUBE DE PROGRAMACAO       \n");
+        printf("==========================================\n");
+        printf(" 1. Iniciar Novo Jogo\n");
+        printf(" 2. Ver Instrucoes\n");
+        printf(" 3. Sair\n");
+        printf("\n Escolha: ");
+        
+        if (scanf("%d", &opcao) != 1) {
+            while (getchar() != '\n'); // Limpa o lixo do teclado
+            continue;
         }
-	}
+
+        switch (opcao) {
+            case 1: {
+                int qtd;
+                do {
+                    printf("\nQuantos jogadores (2 a 4)? ");
+                    if (scanf("%d", &qtd) != 1) {
+                        while (getchar() != '\n');
+                        qtd = 0;
+                    }
+                } while(qtd < 2 || qtd > 4);
+
+                // Chama a função que está no jogador.h
+                jogador_da_vez = criar_lista_jogadores(qtd);
+                
+                printf("\n\x1b[32mSucesso!\x1b[0m O primeiro a jogar: %s [%c]\n", 
+                        jogador_da_vez->nome, jogador_da_vez->peao);
+                system("pause");
+                break;
+            }
+            case 2:
+                printf("\n REGRAS: Avance 30 casas e vença o desafio!\n");
+                system("pause");
+                break;
+        }
+    }
+
     return 0;
 }
