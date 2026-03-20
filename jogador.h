@@ -3,39 +3,44 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "graficos.h"
 
-// Definição da estrutura do Jogador
 typedef struct Jogador {
     char nome[50];
-    char peao;
+    char icone;      // O caractere dentro do peão (ex: @, X)
+    int cor_escolhida; // 1 a 4
     int acertos;
     int erros;
-    struct Jogador *prox; // Lista Circular
+    struct Jogador *prox;
 } Jogador;
 
-// A função agora vive aqui dentro! 
-// Usamos "static" para evitar erros de duplicidade se você incluir em vários arquivos.
 static Jogador* criar_lista_jogadores(int n) {
-    Jogador *primeiro = NULL;
-    Jogador *ultimo = NULL;
+    Jogador *primeiro = NULL, *ultimo = NULL;
 
     for (int i = 0; i < n; i++) {
         Jogador *novo = (Jogador*) malloc(sizeof(Jogador));
-        if (novo == NULL) {
-            printf("Erro de memoria!\n");
-            exit(1);
-        }
+        if (!novo) exit(1);
 
-        printf("\n--- Cadastro Jogador %d ---\n", i + 1);
+        system("cls");
+        printf("--- Cadastro Jogador %d ---\n", i + 1);
         printf("Nome: ");
-        scanf("%s", novo->nome);
+        scanf(" %[^\n]", novo->nome);
+
+        mostrarOpcoesPeoes();
         
-        printf("Escolha seu peao (ex: @, #, X): ");
-        scanf(" %c", &novo->peao); // O espaço antes do %c é importante!
+        int esc;
+        do {
+            printf("Escolha o numero da cor (1-4): ");
+            scanf("%d", &esc);
+        } while(esc < 1 || esc > 4);
+        
+        novo->cor_escolhida = esc;
+
+        printf("Digite um caractere para voce ser representado: (ex: %d, X, @): ", i+1);
+        scanf(" %c", &novo->icone);
 
         novo->acertos = 0;
         novo->erros = 0;
-        novo->prox = NULL;
 
         if (primeiro == NULL) {
             primeiro = novo;
@@ -45,12 +50,7 @@ static Jogador* criar_lista_jogadores(int n) {
             ultimo = novo;
         }
     }
-
-    // Fecha o círculo da lista
-    if (ultimo != NULL) {
-        ultimo->prox = primeiro;
-    }
-
+    ultimo->prox = primeiro; // Fecha a lista circular
     return primeiro;
 }
 
