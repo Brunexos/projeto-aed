@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "jogador.h"
+#include "jogador.h" // A mágica acontece aqui
 
 #ifdef _WIN32
     #include <windows.h>
