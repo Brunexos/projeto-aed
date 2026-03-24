@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "jogador.h" // A mágica acontece aqui
+#include "jogador.h"
 
 #ifdef _WIN32
     #include <windows.h>
@@ -13,13 +13,12 @@ void configurarTerminal() {
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD dwMode = 0;
     GetConsoleMode(hOut, &dwMode);
-    dwMode |= 0x0004; // Habilita cores ANSI
+    dwMode |= 0x0004;
     SetConsoleMode(hOut, dwMode);
 #endif
 }
 
 int main(int argc, char *argv[]) {
-    // Lógica para abrir em janela externa (CMD)
     if (argc == 1 || strcmp(argv[1], "jogo") != 0) {
         char comando[512];
         sprintf(comando, "start \"MEU_JOGO\" \"%s\" jogo", argv[0]);
@@ -30,46 +29,45 @@ int main(int argc, char *argv[]) {
     configurarTerminal();
     srand(time(NULL));
 
+    tp_fila mesa;
+    tp_item jogador_atual; 
     int opcao = 0;
-    Jogador *jogador_da_vez = NULL;
 
     while (opcao != 3) {
         system("cls");
         printf("==========================================\n");
         printf("       JOGO DO CLUBE DE PROGRAMACAO       \n");
         printf("==========================================\n");
-        printf(" 1. Iniciar Novo Jogo\n");
+        printf(" 1. Iniciar Novo Jogo (Cadastrar)\n");
         printf(" 2. Ver Instrucoes\n");
         printf(" 3. Sair\n");
         printf("\n Escolha: ");
         
         if (scanf("%d", &opcao) != 1) {
-            while (getchar() != '\n'); // Limpa o lixo do teclado
+            while (getchar() != '\n');
             continue;
         }
 
         switch (opcao) {
-            case 1: {
-                int qtd;
-                do {
-                    printf("\nQuantos jogadores (2 a 4)? ");
-                    if (scanf("%d", &qtd) != 1) {
-                        while (getchar() != '\n');
-                        qtd = 0;
-                    }
-                } while(qtd < 2 || qtd > 4);
-
-                // Chama a função que está no jogador.h
-                jogador_da_vez = criar_lista_jogadores(qtd);
+            case 1:
+                inicializaFila(&mesa);
+                cadastrarJogadores(&mesa); 
+                if (!filaVazia(&mesa)) {
+                    removeFila(&mesa, &jogador_atual);
+                    printf("\n\x1b[32mSucesso!\x1b[0m O primeiro a jogar: %s\n", jogador_atual.nome);
+                    insereFila(&mesa, jogador_atual);
+                }
                 
-                printf("\n\x1b[32mSucesso!\x1b[0m O primeiro a jogar: %s [%c]\n", 
-                        jogador_da_vez->nome, jogador_da_vez->peao);
                 system("pause");
                 break;
-            }
+
             case 2:
                 printf("\n REGRAS: Avance 30 casas e vença o desafio!\n");
                 system("pause");
+                break;
+            
+            case 3:
+                printf("\nSaindo...\n");
                 break;
         }
     }
