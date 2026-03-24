@@ -8,7 +8,7 @@
     #include <windows.h>
 #endif
 
-void configurarTerminal() {
+void configurarTerminal() { // NAO MEXE AQUI PELO AMOR DE DEUS
 #ifdef _WIN32
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD dwMode = 0;
