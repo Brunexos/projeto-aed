@@ -34,13 +34,13 @@ int main(int argc, char *argv[]) {
     int opcao = 0;
 
     while (opcao != 3) {
-        system("cls");
+        system("cls");//limpa o terminal
         printf("==========================================\n");
         printf("       JOGO DO CLUBE DE PROGRAMACAO       \n");
         printf("==========================================\n");
-        printf(" 1. Iniciar Novo Jogo (Cadastrar)\n");
-        printf(" 2. Ver Instrucoes\n");
-        printf(" 3. Sair\n");
+        printf(GREEN " 1. Iniciar Novo Jogo (Cadastrar)\n" RESET);
+        printf(YELLOW " 2. Ver Instrucoes\n" RESET);
+        printf(RED" 3. Sair\n" RESET);
         printf("\n Escolha: ");
         
         if (scanf("%d", &opcao) != 1) {
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
                 break;
 
             case 2:
-                printf("\n REGRAS: Avance 30 casas e vença o desafio!\n");
+                printf(YELLOW "\n REGRAS: Avance 30 casas e vença o desafio!\n" RESET);
                 system("pause");
                 break;
             

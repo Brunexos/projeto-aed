@@ -14,7 +14,9 @@ void cadastrarJogadores(tp_fila *f) { //Bruno->cadastro usando FILA
     int qtd;
     printf("Quantos jogadores vao participar? ");
     scanf("%d", &qtd);
+    system("cls");
     while(qtd<2 || qtd>4){//pro usuario nao escolher menor que 2 e maior que 4
+       system("cls");
         printf(RED"ERRO ERRO ERRO ERRO ERRO ERRO\n" RESET);
         printf("escolha um numero de 2 a 4\n");
         scanf("%d", &qtd);
@@ -25,7 +27,6 @@ void cadastrarJogadores(tp_fila *f) { //Bruno->cadastro usando FILA
         tp_item novo;
         novo.id = i;
         novo.posicao = 0;
-
         printf("Digite o nome do jogador %d: ", i);
         fgets(novo.nome, 50, stdin);
         novo.nome[strcspn(novo.nome, "\n")] = 0;
