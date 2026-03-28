@@ -3,11 +3,11 @@
 #include <stdio.h>
 #define MAX 100
 typedef int
-    tp_item;
+    tp_itemp;
     
 typedef struct{
     int topo;
-    tp_item item[MAX];
+    tp_itemp item[MAX];
 } tp_pilha;
 
 void inicializa_pilha(tp_pilha *p){
@@ -27,28 +27,28 @@ int pilha_cheia(tp_pilha *p){
     }
 }
 
-int push(tp_pilha *p, tp_item e){
+int push(tp_pilha *p, tp_itemp e){
     if(pilha_cheia(p)==1) return 0;
     p->topo++;
     p->item[p->topo]=e;
     return 1;
 }
 
-int pop(tp_pilha *p, tp_item *e){
+int pop(tp_pilha *p, tp_itemp *e){
 	if(pilha_vazia(p)) return 0;
 	*e=p->item[p->topo];
 	p->topo--;
 	return 1;
 }
 
-int top(tp_pilha *p, tp_item *e){
+int top(tp_pilha *p, tp_itemp *e){
 	if (pilha_vazia(p)) return 0;
 	*e=p->item[p->topo];
 	return 1;
 }
 
 void imprime_pilha(tp_pilha p){
-	tp_item e;
+	tp_itemp e;
 	printf("\n");
 	while(!pilha_vazia(&p)){
 		pop(&p, &e);

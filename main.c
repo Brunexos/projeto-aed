@@ -3,6 +3,8 @@
 #include <string.h>
 #include <time.h>
 #include "jogador.h"
+#include "questoes.h"
+
 
 #ifdef _WIN32
     #include <windows.h>
@@ -41,6 +43,7 @@ int main(int argc, char *argv[]) {
         printf(GREEN " 1. Iniciar Novo Jogo (Cadastrar)\n" RESET);
         printf(YELLOW " 2. Ver Instrucoes\n" RESET);
         printf(RED" 3. Sair\n" RESET);
+        printf(RED" 4. teste de questões\n" RESET);
         printf("\n Escolha: ");
         
         if (scanf("%d", &opcao) != 1) {
@@ -68,6 +71,12 @@ int main(int argc, char *argv[]) {
             
             case 3:
                 printf("\nSaindo...\n");
+                break;
+
+
+            case 4:
+                QuestoesJogo();
+                system("pause");
                 break;
         }
     }
