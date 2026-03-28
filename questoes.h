@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "pilha.h"
+#include "jogador.h"
 
 // struct
 typedef struct {
@@ -60,7 +61,7 @@ static void QuestoesJogo() {
         {"Elemento sai de onde na pilha?", {"Baixo", "Cima", "Meio", "Aleatorio"}, 1},
         {"Topo inicial?", {"1", "-1", "0", "2"}, 1},
         {"int **p armazena?", {"Valor", "Endereco", "Array", "Erro"}, 1},
-        {"Sintaxe correta para ponteiro de funcao (void, recebe int)?", {"void *f(int);", "void (*ptr)(int),", "func ptr(int);", "void (*ptr)(int);"}, 3}
+        {RED"Sintaxe correta para ponteiro de funcao (void, recebe int)?"RESET, {"void *f(int);", "void (*ptr)(int),", "func ptr(int);", "void (*ptr)(int);"}, 3}
     };
 
     tp_pilha f, m, d;
