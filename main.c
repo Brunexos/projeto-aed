@@ -1,3 +1,5 @@
+//comando pro jogo rodar ''  gcc *.c -o jogo.exe ; .\jogo.exe  ''  <== usar esse comando no terminal
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
