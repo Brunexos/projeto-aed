@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     while (opcao != 3) {
         system("cls");//limpa o terminal
         printf("==========================================\n");
-        printf("       JOGO DO CLUBE DE PROGRAMACAO       \n");
+        printf("       JOGO DO CLUBE ARSENAI      \n");
         printf("==========================================\n");
         printf(GREEN " 1. Iniciar Novo Jogo (Cadastrar)\n" RESET);
         printf(YELLOW " 2. Ver Instrucoes\n" RESET);
