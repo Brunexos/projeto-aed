@@ -3,7 +3,7 @@
 
 #include "fila.h"
 
-// Adicione estas linhas aqui para que a main possa enxergar
+
 #define RED     "\x1b[31m"
 #define GREEN   "\x1b[32m"
 #define YELLOW  "\x1b[33m"
