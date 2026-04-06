@@ -52,7 +52,7 @@ void QuestoesJogo() {
         {"Topo inicial?", {"1", "-1", "0", "2"}, 1},
         {"int **p armazena?", {"Valor", "Endereco", "Array", "Erro"}, 1},
         {RED"Sintaxe correta para ponteiro de funcao (void, recebe int)?"RESET, {"void *f(int);", "void (*ptr)(int),", "func ptr(int);", "void (*ptr)(int);"}, 3},
-        {"Em uma pilha implementada com vetor, o que ocorre se uma operação de push é realizada quando a pilha já está cheia?", {"O elemento substitui o topo atual", "Ocorre overflow de pilha", "A pilha é automaticamente redimensionada", " O elemento é inserido na base"}, 1}
+        {"Em uma pilha implementada com vetor, o que ocorre se uma operação de push e realizada quando a pilha ja está cheia?", {"O elemento substitui o topo atual", "Ocorre overflow de pilha", "A pilha e automaticamente redimensionada", " O elemento e inserido na base"}, 1}
     };
 
     tp_pilha f, m, d;

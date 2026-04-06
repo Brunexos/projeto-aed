@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
         printf(GREEN " 1. Iniciar Novo Jogo (Cadastrar)\n" RESET);
         printf(YELLOW " 2. Ver Instrucoes\n" RESET);
         printf(RED" 3. Sair\n" RESET);
-        printf(RED" 4. teste de questões\n" RESET);
+        printf(RED" 4. teste de questoes\n" RESET);
         printf("\n Escolha: ");
         
         if (scanf("%d", &opcao) != 1) {
