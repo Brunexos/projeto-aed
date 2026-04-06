@@ -51,7 +51,8 @@ void QuestoesJogo() {
         {"Elemento sai de onde na pilha?", {"Baixo", "Cima", "Meio", "Aleatorio"}, 1},
         {"Topo inicial?", {"1", "-1", "0", "2"}, 1},
         {"int **p armazena?", {"Valor", "Endereco", "Array", "Erro"}, 1},
-        {RED"Sintaxe correta para ponteiro de funcao (void, recebe int)?"RESET, {"void *f(int);", "void (*ptr)(int),", "func ptr(int);", "void (*ptr)(int);"}, 3}
+        {RED"Sintaxe correta para ponteiro de funcao (void, recebe int)?"RESET, {"void *f(int);", "void (*ptr)(int),", "func ptr(int);", "void (*ptr)(int);"}, 3},
+        {"Em uma pilha implementada com vetor, o que ocorre se uma operação de push é realizada quando a pilha já está cheia?", {"O elemento substitui o topo atual", "Ocorre overflow de pilha", "A pilha é automaticamente redimensionada", " O elemento é inserido na base"}, 1}
     };
 
     tp_pilha f, m, d;
@@ -59,14 +60,15 @@ void QuestoesJogo() {
     inicializa_pilha(&m);
     inicializa_pilha(&d);
 
-    int iF[] = {0, 1}, iM[] = {2, 3};
+    int iF[] = {0, 1}, iM[] = {2, 3}, iD[] = {4, 5};
 
     embaralhar(iF, 2);
     embaralhar(iM, 2);
+    embaralhar(iD, 2);
 
     push(&f, iF[0]); push(&f, iF[1]);
     push(&m, iM[0]); push(&m, iM[1]);
-    push(&d, 4);
+    push(&d, iD[0]); push(&d, iD[1]);
 
     int op;
     do {
