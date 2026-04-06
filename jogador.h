@@ -11,5 +11,5 @@
 #define RESET   "\x1b[0m"
 
 void cadastrarJogadores(tp_fila *f);
-
+int realizarJogada(tp_fila *f);
 #endif

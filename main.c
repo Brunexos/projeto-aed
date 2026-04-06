@@ -57,13 +57,25 @@ int main(int argc, char *argv[]) {
             case 1:
                 inicializaFila(&mesa);
                 cadastrarJogadores(&mesa); 
-                if (!filaVazia(&mesa)) {
-                    removeFila(&mesa, &jogador_atual);
-                    printf("\n\x1b[32mSucesso!\x1b[0m O primeiro a jogar: %s\n", jogador_atual.nome);
-                    insereFila(&mesa, jogador_atual);
-                }
                 
-                system("pause");
+                if (!filaVazia(&mesa)) {
+                    int fimDeJogo = 0; // Controle do loop
+
+                    while (fimDeJogo == 0) { // Enquanto ninguém ganhar...
+                        system("cls");
+                        
+                        // A variável recebe o retorno da função (0 ou 1)
+                        fimDeJogo = realizarJogada(&mesa);
+
+                        if (fimDeJogo == 0) {
+                            printf("\nPressione qualquer tecla para a proxima jogada...");
+                            system("pause > nul"); // "> nul" esconde a mensagem padrão do Windows
+                        }
+                    }
+                    // Quando sai do while, é porque alguém chegou em 30
+                    printf("\nRetornando ao menu principal...\n");
+                    system("pause");
+                }
                 break;
 
             case 2:
