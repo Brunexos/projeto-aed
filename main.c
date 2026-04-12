@@ -20,11 +20,11 @@
 #define RESET   "\x1b[0m"
 
 // Teclas
-#define SETA_CIMA 72
-#define SETA_BAIXO 80
-#define ENTER 13
+#define SETA_CIMA 72 //definição de teclas
+#define SETA_BAIXO 80 //definição de teclas
+#define ENTER 13 //definição de teclas (quando apertar enter, vai selecionar a aba)
 
-// Função para mover o cursor para X (coluna) e Y (linha)
+// Função para mover o cursor para X (coluna) e Y (linha) // pra levar os  prints pro meio da tela...
 void irPara(int x, int y) {
     printf("\033[%d;%dH", y, x);
 }
@@ -40,15 +40,55 @@ void configurarTerminal() {
     printf("\033[?25l"); // Esconde o cursor do terminal
 }
 
-// Banner ARSENAI com alinhamento interno para centralizar
+// Banner JOGO DO SUSA com alinhamento interno para centralizar
 void desenharBanner(int x, int y) {
     // Alinhamento dos espaços do próprio banner para compensar o tamanho
-    irPara(x, y);     printf(CYAN  "      db       d8888b. .d8888. d88888b d8b   db   d888b  " RESET);
-    irPara(x, y + 1); printf(CYAN  "     d88b     88  `8D 88'  YP 88'     888o  88 88' Y8b " RESET);
-    irPara(x, y + 2); printf(BLUE  "    d8'`8b    88oobY' `8bo.   88ooooo 88V8o 88 88      " RESET);
-    irPara(x, y + 3); printf(BLUE  "   d888888b   88`8b     `Y8b. 88~~~~~ 88 V8o88 88  ooo " RESET);
-    irPara(x, y + 4); printf(WHITE "  d8'    `8b  88 `88. db   8D 88.     88  V888 88. ~8~ " RESET);
-    irPara(x, y + 5); printf(WHITE " dP      YP  88   YD `8888Y' Y88888P VP   V8P  Y888P   " RESET);
+    irPara(x, y);     printf(CYAN  "      d88b  .d88b.   d888b   .d88b.      d8888b.  .d88b.      .d8888. db    db .d8888.  .d8b.  " RESET);
+    irPara(x, y + 1); printf(CYAN  "     `8P' .8P  Y8. 88' Y8b .8P  Y8.     88  `8D .8P  Y8.     88'  YP 88    88 88'  YP d8' `8b " RESET);
+    irPara(x, y + 2); printf(BLUE  "      88  88    88 88      88    88     88   88 88    88     `8bo.   88    88 `8bo.   88ooo88 " RESET);
+    irPara(x, y + 3); printf(BLUE  "      88  88    88 88  ooo 88    88     88   88 88    88       `Y8b. 88    88   `Y8b. 88~~~88 " RESET);
+    irPara(x, y + 4); printf(WHITE "  db. 88  `8b  d8' 88. ~8~ `8b  d8'     88  .8D `8b  d8'     db   8D 88b  d88 db   8D 88   88 " RESET);
+    irPara(x, y + 5); printf(WHITE "  Y8888P   `Y88P'   Y888P   `Y88P'      Y8888D'  `Y88P'      `8888Y' ~Y8888P' `8888Y' YP   YP " RESET);
+}
+
+// Nova função de apresentação (Tela de Carregamento)
+void telaApresentacao() {
+    // Tela 1: Nome da Equipe
+    system("cls");
+    irPara(50, 5); 
+    printf(CYAN "APRESENTADO POR:" RESET);
+    irPara(50, 7);
+    printf(WHITE "=== ARSENAI ===" RESET);
+    Sleep(2500); // Pausa por 2.5 segundos
+
+    // Tela 2: Créditos e Carregamento
+    system("cls");
+    irPara(51, 5);
+    printf(YELLOW "DESENVOLVIDO POR:" RESET);
+    
+    // Nomes dos criadores (substitua pelos reais)
+    irPara(53, 7); printf(WHITE "- Bruno Barbosa" RESET);
+    irPara(53, 8); printf(WHITE "- Rafael Prado" RESET);
+    irPara(53, 9); printf(WHITE "- Felipe Cardim" RESET);
+    irPara(53, 10); printf(WHITE "- Nicolas Jezler" RESET);
+    irPara(53, 11); printf(WHITE "- Samuel" RESET);
+
+    // Brincadeira da barra de carregamento "falsa"
+    irPara(50, 23);
+    printf("Carregando o arsenal...");
+    
+    irPara(45, 25);
+    printf("[");
+    irPara(75, 25);
+    printf("]");
+    
+    irPara(46, 25);
+    for (int i = 0; i < 29; i++) {
+        printf(GREEN "#" RESET); 
+        Sleep(100); 
+    }
+    
+    Sleep(800); 
 }
 
 int main(int argc, char *argv[]) {
@@ -68,6 +108,9 @@ int main(int argc, char *argv[]) {
     configurarTerminal();
     srand(time(NULL));
 
+    // Chamada da tela de apresentação que criamos
+    telaApresentacao();
+
     tp_fila mesa;
     int selecionado = 1;
     int tecla = 0;
@@ -75,7 +118,7 @@ int main(int argc, char *argv[]) {
 
     // Definições de posição do menu para centralizar em uma tela de 120 colunas
     // O banner tem 62 caracteres de largura. (120 - 62) / 2 = 29 colunas de recuo.
-    int posX_centro = 30; // Ajustado para centralizar o banner de 62 caracteres
+    int posX_centro = 13; // Ajustado para centralizar o banner de 62 caracteres
     int posY_centro = 3; 
 
     // O menu de navegação tem 42 caracteres de largura. (120 - 42) / 2 = 39 colunas de recuo.
@@ -119,15 +162,15 @@ int main(int argc, char *argv[]) {
 
         if (tecla == 0 || tecla == 224) {
             tecla = _getch();
-            if (tecla == SETA_CIMA) {
+            if (tecla == SETA_CIMA) { //se apertar a tecla cima, o selecionado vai diminuir, o que ocasiona a escolha por setas
                 selecionado--;
                 if (selecionado < 1) selecionado = 4;
-            } else if (tecla == SETA_BAIXO) {
+            } else if (tecla == SETA_BAIXO) { //se apertar a tecla baixo, o selecionado vai aumentar, o que ocasiona a escolha por setas
                 selecionado++;
                 if (selecionado > 4) selecionado = 1;
             }
         } 
-        else if (tecla == ENTER) {
+        else if (tecla == ENTER) { // ja esta escolhido a opção no menu
             irPara(1, posY_centro + posY_menu_offset + 14); 
             
             switch (selecionado) {
