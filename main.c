@@ -1,3 +1,5 @@
+//comando pra dar start
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
