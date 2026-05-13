@@ -1,4 +1,4 @@
-//comando pra dar start
+//comando pra dar start gcc *.c -o jogo.exe ; .\jogo.exe
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,7 @@
 // Definições de cores ANSI
 #define RED     "\x1b[31m"
 #define GREEN   "\x1b[32m"
-#define YELLOW  "\x1b[33m"
+#define YELLOW  "\x1b[33m" 
 #define BLUE    "\x1b[34m"
 #define CYAN    "\x1b[36m"
 #define WHITE   "\x1b[37m"
