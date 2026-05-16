@@ -1,0 +1,1 @@
+// aqui vai botar as funções relacionadas ao tabuleiro, como criar o tabuleiro, adicionar casas, etc.
