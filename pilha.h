@@ -3,16 +3,15 @@
 
 #include <stdio.h>
 
-#define MAX 100
+#define MAX_PILHA 100
 
 typedef int tp_itemp;
 
 typedef struct {
     int topo;
-    tp_itemp item[MAX];
+    tp_itemp item[MAX_PILHA];
 } tp_pilha;
 
-// Protótipos das funções
 void inicializa_pilha(tp_pilha *p);
 int pilha_vazia(tp_pilha *p);
 int pilha_cheia(tp_pilha *p);

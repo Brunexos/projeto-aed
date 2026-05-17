@@ -1,28 +1,35 @@
 #ifndef TABULEIRO_H
 #define TABULEIRO_H
+
 #include <stdio.h>
 #include <stdlib.h>
-#define MAX 100
 
-
-
-//uso do enum para definir os tipos de casa pela maior praticidade q é dada pro código.
-typedef enum{
+typedef enum {
     NORMAL,
     PRISAO,
-    AZAR,
-    SORTE,
-    //aqui são os tipos de casa, aq só tem alguns exemplos que podem ser alterados
+    PERGUNTA
 } TipoCasa;
 
+typedef enum {
+    SEM_NIVEL,
+    FACIL,
+    MEDIO,
+    DIFICIL
+} NivelPergunta;
 
-// struct que representa uma casa do tabuleiro
-typedef struct Casa{
+typedef struct Casa {
     int id;
     char nome[100];
     TipoCasa tipo;
     struct Casa *prox;
     struct Casa *ant;
 } Casa;
+
+Casa* criarCasa(int id, const char *nome, TipoCasa tipo);
+void inserirCasaFim(Casa **inicio, Casa **fim, Casa *nova);
+void criarTabuleiroPadrao(Casa **inicio, Casa **fim);
+Casa* moverCasas(Casa *atual, int passos);
+void mostrarCasaAtual(Casa *casa);
+void liberarTabuleiro(Casa *inicio);
 
 #endif

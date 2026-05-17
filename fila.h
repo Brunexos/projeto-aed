@@ -2,14 +2,24 @@
 #define FILA_H
 
 #include <stdio.h>
+#include "tabuleiro.h"
 
 #define MAXF 300
+
+typedef enum {
+    COR_VERDE,
+    COR_AZUL,
+    COR_CIANO,
+    COR_MAGENTA,
+    COR_BRANCO
+} CorJogador;
 
 typedef struct {
     int id;
     char nome[50];
-    int posicao; // casa do peão
-    char peao;   
+    Casa *casaAtual;
+    CorJogador cor;
+    int preso;
 } Jogador;
 
 typedef Jogador tp_item;
@@ -19,7 +29,6 @@ typedef struct {
     int ini, fim;
 } tp_fila;
 
-// Protótipos
 void inicializaFila(tp_fila *f);
 int filaVazia(tp_fila *f);
 int filaCheia(tp_fila *f);

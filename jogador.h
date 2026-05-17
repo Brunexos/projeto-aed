@@ -2,7 +2,7 @@
 #define JOGADOR_H
 
 #include "fila.h"
-
+#include "tabuleiro.h"
 
 #define RED     "\x1b[31m"
 #define GREEN   "\x1b[32m"
@@ -10,6 +10,7 @@
 #define BLUE    "\x1b[34m"
 #define RESET   "\x1b[0m"
 
-void cadastrarJogadores(tp_fila *f);
-int realizarJogada(tp_fila *f);
+void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro);
+int realizarJogada(tp_fila *f, Casa *inicioTabuleiro);
+
 #endif
