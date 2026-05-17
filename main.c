@@ -1,5 +1,5 @@
 // Comando para compilar e rodar:
-// gcc main.c fila.c jogador.c pilha.c questoes.c tabuleiro.c visual.c -o jogo.exe ; .\jogo.exe
+// gcc main.c fila.c jogador.c pilha.c questoes.c tabuleiro.c visual.c historico.c listade.c -o jogo.exe; if ($?) { .\jogo.exe }
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +11,7 @@
 #include "questoes.h"
 #include "tabuleiro.h"
 #include "visual.h"
+#include "historico.h"
 
 #ifdef _WIN32
     #include <windows.h>
@@ -28,12 +29,33 @@
 #define SETA_BAIXO 80
 #define ENTER 13
 
+#define LARGURA_TERMINAL 160
+#define ALTURA_TERMINAL 55
+
 void irPara(int x, int y) {
     printf("\033[%d;%dH", y, x);
 }
 
+int centroX(int larguraTexto) {
+    return (LARGURA_TERMINAL - larguraTexto) / 2;
+}
+
+void imprimirCentralizado(int y, const char *texto) {
+    int x = centroX(strlen(texto));
+    irPara(x, y);
+    printf("%s", texto);
+}
+
+void imprimirCentralizadoCor(int y, const char *cor, const char *texto) {
+    int x = centroX(strlen(texto));
+    irPara(x, y);
+    printf("%s%s%s", cor, texto, RESET);
+}
+
 void configurarTerminal() {
 #ifdef _WIN32
+    system("mode con cols=160 lines=55");
+
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD dwMode = 0;
 
@@ -70,44 +92,33 @@ void desenharBanner(int x, int y) {
 void telaApresentacao() {
     system("cls");
 
-    irPara(50, 5);
-    printf(CYAN "APRESENTADO POR:" RESET);
-
-    irPara(50, 7);
-    printf(WHITE "=== ARSENAI ===" RESET);
+    imprimirCentralizadoCor(7, CYAN, "APRESENTADO POR:");
+    imprimirCentralizadoCor(9, WHITE, "=== ARSENAI ===");
 
     Sleep(2500);
 
     system("cls");
 
-    irPara(51, 5);
-    printf(YELLOW "DESENVOLVIDO POR:" RESET);
+    imprimirCentralizadoCor(6, YELLOW, "DESENVOLVIDO POR:");
 
-    irPara(53, 7);
-    printf(WHITE "- Bruno Barbosa" RESET);
+    imprimirCentralizadoCor(8, WHITE, "- Bruno Barbosa");
+    imprimirCentralizadoCor(9, WHITE, "- Rafael Prado");
+    imprimirCentralizadoCor(10, WHITE, "- Felipe Cardim");
+    imprimirCentralizadoCor(11, WHITE, "- Nicolas Jezler");
+    imprimirCentralizadoCor(12, WHITE, "- Samuel");
 
-    irPara(53, 8);
-    printf(WHITE "- Rafael Prado" RESET);
+    imprimirCentralizado(25, "Carregando o arsenal...");
 
-    irPara(53, 9);
-    printf(WHITE "- Felipe Cardim" RESET);
+    int larguraBarra = 31;
+    int xBarra = centroX(larguraBarra);
 
-    irPara(53, 10);
-    printf(WHITE "- Nicolas Jezler" RESET);
-
-    irPara(53, 11);
-    printf(WHITE "- Samuel" RESET);
-
-    irPara(50, 23);
-    printf("Carregando o arsenal...");
-
-    irPara(45, 25);
+    irPara(xBarra, 27);
     printf("[");
 
-    irPara(75, 25);
+    irPara(xBarra + 30, 27);
     printf("]");
 
-    irPara(46, 25);
+    irPara(xBarra + 1, 27);
 
     for (int i = 0; i < 29; i++) {
         printf(GREEN "#" RESET);
@@ -117,11 +128,69 @@ void telaApresentacao() {
     Sleep(800);
 }
 
+void telaRegrasPrincipal() {
+    system("cls");
+
+    imprimirCentralizadoCor(6, YELLOW, "================ REGRAS DO JOGO ================");
+
+    imprimirCentralizado(9,  "- O jogador joga o dado e anda pelo tabuleiro.");
+    imprimirCentralizado(11, "- Casa NORMAL: nada acontece.");
+    imprimirCentralizado(13, "- Casa PRISAO: perde a proxima rodada.");
+    imprimirCentralizado(15, "- Casa de PERGUNTA: o jogador escolhe a dificuldade.");
+    imprimirCentralizado(17, "- FACIL: acertou anda 2, errou volta 1.");
+    imprimirCentralizado(19, "- MEDIO: acertou anda 3, errou volta 2.");
+    imprimirCentralizado(21, "- DIFICIL: acertou anda 4, errou volta 3.");
+    imprimirCentralizado(23, "- Vence quem chegar na casa 30.");
+    imprimirCentralizado(25, "- No tabuleiro, o nome do jogador aparece na cor escolhida.");
+
+    imprimirCentralizadoCor(30, CYAN, "Pressione qualquer tecla para voltar...");
+
+    _getch();
+}
+
+void desenharMenuPrincipal(int selecionado) {
+    int larguraBanner = 101;
+    int xBanner = centroX(larguraBanner);
+    int yBanner = 4;
+
+    int larguraMenu = 44;
+    int xMenu = centroX(larguraMenu);
+    int yMenu = 17;
+
+    desenharBanner(xBanner, yBanner);
+
+    irPara(xMenu, yMenu);
+    printf("+------------------------------------------+");
+
+    irPara(xMenu, yMenu + 1);
+    printf("|       MENU DE NAVEGACAO - ARSENAI        |");
+
+    irPara(xMenu, yMenu + 2);
+    printf("+------------------------------------------+");
+
+    irPara(xMenu, yMenu + 4);
+    printf("| %s 1. Iniciar Novo Jogo" RESET "          |", selecionado == 1 ? GREEN " >" : "  ");
+
+    irPara(xMenu, yMenu + 5);
+    printf("| %s 2. Ver Instrucoes" RESET "             |", selecionado == 2 ? YELLOW " >" : "  ");
+
+    irPara(xMenu, yMenu + 6);
+    printf("| %s 3. Sair" RESET "                       |", selecionado == 3 ? RED " >" : "  ");
+
+    irPara(xMenu, yMenu + 7);
+    printf("| %s 4. Teste de Questoes" RESET "          |", selecionado == 4 ? CYAN " >" : "  ");
+
+    irPara(xMenu, yMenu + 9);
+    printf("+------------------------------------------+");
+
+    imprimirCentralizadoCor(yMenu + 12, WHITE, "Use as setas para subir/descer e ENTER para selecionar");
+}
+
 int main(int argc, char *argv[]) {
     if (argc == 1 || strcmp(argv[1], "jogo") != 0) {
         char comando[512];
 
-        sprintf(comando, "mode con cols=120 lines=40 && start \"MEU_JOGO\" \"%s\" jogo", argv[0]);
+        sprintf(comando, "start \"MEU_JOGO\" \"%s\" jogo", argv[0]);
 
         system(comando);
 
@@ -134,6 +203,7 @@ int main(int argc, char *argv[]) {
     telaApresentacao();
 
     tp_fila mesa;
+    Historico historicoPartida;
 
     Casa *inicioTabuleiro = NULL;
     Casa *fimTabuleiro = NULL;
@@ -144,43 +214,10 @@ int main(int argc, char *argv[]) {
     int tecla = 0;
     int rodando = 1;
 
-    int posX_centro = 13;
-    int posY_centro = 3;
-
-    int posX_menu = 39;
-    int posY_menu_offset = 8;
-
     while (rodando) {
         system("cls");
 
-        desenharBanner(posX_centro, posY_centro);
-
-        irPara(posX_menu, posY_centro + posY_menu_offset);
-        printf("+------------------------------------------+");
-
-        irPara(posX_menu, posY_centro + posY_menu_offset + 1);
-        printf("|       MENU DE NAVEGACAO - ARSENAI        |");
-
-        irPara(posX_menu, posY_centro + posY_menu_offset + 2);
-        printf("+------------------------------------------+");
-
-        irPara(posX_menu, posY_centro + posY_menu_offset + 4);
-        printf("| %s 1. Iniciar Novo Jogo" RESET "          |", (selecionado == 1 ? GREEN " >" : "  "));
-
-        irPara(posX_menu, posY_centro + posY_menu_offset + 5);
-        printf("| %s 2. Ver Instrucoes" RESET "             |", (selecionado == 2 ? YELLOW " >" : "  "));
-
-        irPara(posX_menu, posY_centro + posY_menu_offset + 6);
-        printf("| %s 3. Sair" RESET "                       |", (selecionado == 3 ? RED " >" : "  "));
-
-        irPara(posX_menu, posY_centro + posY_menu_offset + 7);
-        printf("| %s 4. Teste de Questoes" RESET "          |", (selecionado == 4 ? CYAN " >" : "  "));
-
-        irPara(posX_menu, posY_centro + posY_menu_offset + 9);
-        printf("+------------------------------------------+");
-
-        irPara(posX_menu + 7, posY_centro + posY_menu_offset + 11);
-        printf(WHITE "Use as setas para subir/descer" RESET);
+        desenharMenuPrincipal(selecionado);
 
         tecla = _getch();
 
@@ -203,14 +240,18 @@ int main(int argc, char *argv[]) {
             }
         }
         else if (tecla == ENTER) {
-            irPara(1, posY_centro + posY_menu_offset + 14);
-
             switch (selecionado) {
                 case 1:
                     printf("\033[?25h");
 
                     inicializaFila(&mesa);
+                    inicializarHistorico(&historicoPartida);
+
+                    adicionarLog(&historicoPartida, "Partida iniciada");
+
                     cadastrarJogadores(&mesa, inicioTabuleiro);
+
+                    adicionarLog(&historicoPartida, "Jogadores cadastrados");
 
                     printf("\033[?25l");
 
@@ -220,39 +261,25 @@ int main(int argc, char *argv[]) {
                         while (fimDeJogo == 0) {
                             system("cls");
 
-                            fimDeJogo = realizarJogada(&mesa, inicioTabuleiro);
+                            fimDeJogo = realizarJogada(&mesa, inicioTabuleiro, &historicoPartida);
 
                             if (fimDeJogo == 0) {
-                                printf("\nPressione qualquer tecla para a proxima jogada...");
+                                imprimirCentralizadoCor(52, WHITE, "Pressione qualquer tecla para a proxima jogada...");
                                 _getch();
                             }
                         }
-
-                        printf("\nRetornando ao menu principal...\n");
-                        system("pause");
                     }
 
                     break;
 
                 case 2:
-                    system("cls");
-
-                    printf(YELLOW "\n REGRAS DO JOGO:\n" RESET);
-                    printf("\n - O jogador joga o dado e anda pelo tabuleiro.");
-                    printf("\n - Casa NORMAL: nada acontece.");
-                    printf("\n - Casa PRISAO: perde a proxima rodada.");
-                    printf("\n - Casa de PERGUNTA: o jogador escolhe a dificuldade.");
-                    printf("\n - FACIL: acertou anda 2, errou volta 1.");
-                    printf("\n - MEDIO: acertou anda 3, errou volta 2.");
-                    printf("\n - DIFICIL: acertou anda 4, errou volta 3.");
-                    printf("\n - Vence quem chegar na casa 30.");
-                    printf("\n - No tabuleiro, o nome do jogador aparece na cor escolhida.\n\n");
-
-                    system("pause");
+                    telaRegrasPrincipal();
                     break;
 
                 case 3:
-                    printf("\nSaindo...\n");
+                    system("cls");
+                    imprimirCentralizadoCor(20, RED, "Saindo...");
+                    Sleep(700);
                     rodando = 0;
                     break;
 

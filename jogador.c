@@ -2,6 +2,7 @@
 #include "questoes.h"
 #include "tabuleiro.h"
 #include "visual.h"
+#include "historico.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,9 +25,29 @@
 #define SETA_CIMA 72
 #define SETA_BAIXO 80
 #define ENTER 13
+#define ESC 27
+#define LARGURA_TERMINAL 160
 
 void pos_jog(int x, int y) {
     printf("\033[%d;%dH", y, x);
+}
+
+static int centroXJog(int larguraTexto) {
+    return (LARGURA_TERMINAL - larguraTexto) / 2;
+}
+
+static void textoCentroJog(int y, const char *texto) {
+    pos_jog(centroXJog(strlen(texto)), y);
+    printf("%s", texto);
+}
+
+static void textoCentroJogCor(int y, const char *cor, const char *texto) {
+    pos_jog(centroXJog(strlen(texto)), y);
+    printf("%s%s%s", cor, texto, RESET);
+}
+
+static void limparTela() {
+    system("cls");
 }
 
 static const char* codigoCorJogador(CorJogador cor) {
@@ -137,27 +158,146 @@ static int animarRolagemDado(int x, int y) {
     return numero;
 }
 
+static void mostrarRegrasTela() {
+    limparTela();
+
+    textoCentroJogCor(4, YELLOW, "================ REGRAS DO JOGO ================");
+
+    textoCentroJog(7, "- O jogador joga o dado e anda pelo tabuleiro.");
+    textoCentroJog(9, "- Casa NORMAL: nada acontece.");
+    textoCentroJog(11, "- Casa PRISAO: perde a proxima rodada.");
+    textoCentroJog(13, "- Casa PERGUNTA: o jogador escolhe a dificuldade.");
+    textoCentroJog(15, "- FACIL: acertou anda 2, errou volta 1.");
+    textoCentroJog(17, "- MEDIO: acertou anda 3, errou volta 2.");
+    textoCentroJog(19, "- DIFICIL: acertou anda 4, errou volta 3.");
+    textoCentroJog(21, "- Vence quem chegar na casa 30.");
+
+    textoCentroJogCor(25, CYAN, "Pressione qualquer tecla para voltar...");
+
+    _getch();
+}
+
+static void mostrarHistoricoTela(Historico *historico) {
+    limparTela();
+
+    textoCentroJogCor(4, CYAN, "============== HISTORICO DA PARTIDA ==============");
+
+    if (historico == NULL || historico->qtd == 0) {
+        textoCentroJog(8, "Nenhum evento registrado ainda.");
+    } else {
+        for (int i = 0; i < historico->qtd; i++) {
+            char linha[200];
+            sprintf(linha, "- %s", historico->logs[i]);
+            textoCentroJog(8 + i * 2, linha);
+        }
+    }
+
+    textoCentroJogCor(25, CYAN, "Pressione qualquer tecla para voltar...");
+
+    _getch();
+}
+
+static int menuAcaoRodada(
+    Casa *inicioTabuleiro,
+    tp_fila *fila,
+    tp_item *jogador,
+    Historico *historico
+) {
+    int selecionado = 1;
+    int tecla = 0;
+
+    while (1) {
+        limparTela();
+
+        desenharTelaJogo(
+            inicioTabuleiro,
+            fila,
+            jogador,
+            historico,
+            "Escolha uma acao para esta rodada",
+            0
+        );
+
+        int xMenu = centroXJog(50);
+
+        pos_jog(xMenu, 34);
+        printf(CYAN "+---------------- MENU DA RODADA ----------------+" RESET);
+
+        pos_jog(xMenu, 36);
+        printf("| %s 1. Rolar dado" RESET "                              |",
+            selecionado == 1 ? GREEN " >" : "  "
+        );
+
+        pos_jog(xMenu, 37);
+        printf("| %s 2. Ver regras" RESET "                              |",
+            selecionado == 2 ? YELLOW " >" : "  "
+        );
+
+        pos_jog(xMenu, 38);
+        printf("| %s 3. Ver historico" RESET "                           |",
+            selecionado == 3 ? CYAN " >" : "  "
+        );
+
+        pos_jog(xMenu, 39);
+        printf(CYAN "+------------------------------------------------+" RESET);
+
+        textoCentroJogCor(41, WHITE, "Use as setas e pressione ENTER");
+
+        tecla = _getch();
+
+        if (tecla == 224 || tecla == 0) {
+            tecla = _getch();
+
+            if (tecla == SETA_CIMA) {
+                selecionado--;
+
+                if (selecionado < 1) {
+                    selecionado = 3;
+                }
+            }
+            else if (tecla == SETA_BAIXO) {
+                selecionado++;
+
+                if (selecionado > 3) {
+                    selecionado = 1;
+                }
+            }
+        }
+        else if (tecla == ENTER) {
+            if (selecionado == 1) {
+                return 1;
+            }
+            else if (selecionado == 2) {
+                mostrarRegrasTela();
+            }
+            else if (selecionado == 3) {
+                mostrarHistoricoTela(historico);
+            }
+        }
+    }
+}
+
 static NivelPergunta escolherDificuldadePergunta() {
     int selecionado = 1;
     int tecla = 0;
 
     while (1) {
-        system("cls");
+        limparTela();
 
-        pos_jog(43, 5);
-        printf(YELLOW "--- ESCOLHA A DIFICULDADE ---" RESET);
+        textoCentroJogCor(5, YELLOW, "--- ESCOLHA A DIFICULDADE ---");
 
-        pos_jog(43, 8);
+        int xOpcoes = centroXJog(20);
+
+        pos_jog(xOpcoes, 8);
         printf("%s 1. FACIL   " RESET, (selecionado == 1 ? GREEN " >" : "  "));
 
-        pos_jog(43, 9);
+        pos_jog(xOpcoes, 9);
         printf("%s 2. MEDIO   " RESET, (selecionado == 2 ? YELLOW " >" : "  "));
 
-        pos_jog(43, 10);
+        pos_jog(xOpcoes, 10);
         printf("%s 3. DIFICIL " RESET, (selecionado == 3 ? RED " >" : "  "));
 
-        pos_jog(43, 13);
-        printf(WHITE "Use as setas e pressione ENTER" RESET);
+        textoCentroJogCor(13, WHITE, "Use as setas e pressione ENTER");
 
         tecla = _getch();
 
@@ -193,25 +333,127 @@ static NivelPergunta escolherDificuldadePergunta() {
     }
 }
 
+static const char* nomeNivel(NivelPergunta nivel) {
+    if (nivel == FACIL) {
+        return "FACIL";
+    }
+
+    if (nivel == MEDIO) {
+        return "MEDIO";
+    }
+
+    return "DIFICIL";
+}
+
+static Casa* animarMovimento(
+    Casa *inicioTabuleiro,
+    tp_fila *fila,
+    tp_item *jogador,
+    Historico *historico,
+    int passos,
+    const char *statusBase
+) {
+    int direcao = passos >= 0 ? 1 : -1;
+    int total = passos >= 0 ? passos : -passos;
+
+    char status[100];
+
+    for (int i = 1; i <= total; i++) {
+        jogador->casaAtual = moverCasas(jogador->casaAtual, direcao);
+
+        sprintf(status, "%s Passo %d de %d", statusBase, i, total);
+
+        limparTela();
+
+        desenharTelaJogo(
+            inicioTabuleiro,
+            fila,
+            jogador,
+            historico,
+            status,
+            0
+        );
+
+        Sleep(320);
+    }
+
+    return jogador->casaAtual;
+}
+
+static void telaVitoria(Casa *inicioTabuleiro, tp_fila *fila, tp_item *vencedor, Historico *historico) {
+    limparTela();
+
+    desenharTelaJogo(
+        inicioTabuleiro,
+        fila,
+        vencedor,
+        historico,
+        "Fim de jogo",
+        0
+    );
+
+    textoCentroJogCor(34, GREEN, "============================================================");
+    textoCentroJogCor(35, GREEN, "                         VITORIA!                           ");
+    textoCentroJogCor(36, GREEN, "============================================================");
+
+    char linha[150];
+
+    sprintf(linha, "Vencedor: %s - Casa %d", vencedor->nome, vencedor->casaAtual->id);
+    textoCentroJog(38, linha);
+
+    textoCentroJogCor(40, CYAN, "Posicoes finais:");
+
+    sprintf(linha, "1. %s - Casa %d", vencedor->nome, vencedor->casaAtual->id);
+    textoCentroJog(42, linha);
+
+    int linhaY = 43;
+    int posicao = 2;
+    int idx = fila->ini;
+
+    while (idx != fila->fim) {
+        idx = (idx == MAXF - 1) ? 0 : idx + 1;
+
+        tp_item jogador = fila->item[idx];
+
+        if (jogador.casaAtual != NULL) {
+            sprintf(linha, "%d. %s - Casa %d", posicao, jogador.nome, jogador.casaAtual->id);
+        } else {
+            sprintf(linha, "%d. %s - Casa --", posicao, jogador.nome);
+        }
+
+        textoCentroJog(linhaY, linha);
+
+        linhaY++;
+        posicao++;
+    }
+
+    textoCentroJogCor(linhaY + 2, YELLOW, "Pressione qualquer tecla para voltar ao menu...");
+
+    _getch();
+}
+
 void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro) {
     int qtd = 2;
     int tecla;
     int selecionado = 2;
 
     while (1) {
-        system("cls");
+        limparTela();
 
-        pos_jog(45, 5);
-        printf(YELLOW "--- QUANTIDADE DE JOGADORES ---" RESET);
+        textoCentroJogCor(5, YELLOW, "--- QUANTIDADE DE JOGADORES ---");
 
-        pos_jog(48, 8);
+        int xOpcoes = centroXJog(20);
+
+        pos_jog(xOpcoes, 8);
         printf("%s 2 Jogadores" RESET, (selecionado == 2 ? CYAN " >" : "  "));
 
-        pos_jog(48, 9);
+        pos_jog(xOpcoes, 9);
         printf("%s 3 Jogadores" RESET, (selecionado == 3 ? CYAN " >" : "  "));
 
-        pos_jog(48, 10);
+        pos_jog(xOpcoes, 10);
         printf("%s 4 Jogadores" RESET, (selecionado == 4 ? CYAN " >" : "  "));
+
+        textoCentroJogCor(13, WHITE, "Use as setas e pressione ENTER");
 
         tecla = _getch();
 
@@ -248,12 +490,14 @@ void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro) {
         novo.casaAtual = inicioTabuleiro;
         novo.preso = 0;
 
-        system("cls");
+        limparTela();
 
-        pos_jog(40, 5);
-        printf(YELLOW "--- CADASTRO JOGADOR %d ---" RESET, i);
+        char tituloCadastro[80];
 
-        pos_jog(40, 8);
+        sprintf(tituloCadastro, "--- CADASTRO JOGADOR %d ---", i);
+        textoCentroJogCor(5, YELLOW, tituloCadastro);
+
+        pos_jog(centroXJog(30), 8);
         printf("Digite o nome: ");
 
         printf("\033[?25h");
@@ -264,13 +508,17 @@ void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro) {
         int cor_idx = 0;
 
         while (1) {
-            system("cls");
+            limparTela();
 
-            pos_jog(40, 5);
-            printf(YELLOW "--- ESCOLHA SUA COR, %s ---" RESET, novo.nome);
+            char tituloCor[100];
+
+            sprintf(tituloCor, "--- ESCOLHA SUA COR, %s ---", novo.nome);
+            textoCentroJogCor(5, YELLOW, tituloCor);
+
+            int xCores = centroXJog(20);
 
             for (int c = 0; c < numCores; c++) {
-                pos_jog(45, 8 + c);
+                pos_jog(xCores, 8 + c);
 
                 if (cor_idx == c) {
                     printf(CYAN " > " RESET);
@@ -280,6 +528,8 @@ void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro) {
 
                 printf("%s%s" RESET, codigoCorJogador(coresDisponiveis[c]), nomeCorJogador(coresDisponiveis[c]));
             }
+
+            textoCentroJogCor(15, WHITE, "Use as setas e pressione ENTER");
 
             tecla = _getch();
 
@@ -306,99 +556,153 @@ void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro) {
         }
 
         if (insereFila(f, novo)) {
-            system("cls");
+            limparTela();
 
-            pos_jog(40, 10);
+            pos_jog(centroXJog(50), 10);
             printf(GREEN "[+] " RESET);
             printf("%s%s" RESET, codigoCorJogador(novo.cor), novo.nome);
             printf(GREEN " entrou com a cor %s!" RESET, nomeCorJogador(novo.cor));
 
-            pos_jog(40, 12);
-            printf("Pressione qualquer tecla para continuar...");
+            textoCentroJog(12, "Pressione qualquer tecla para continuar...");
 
             _getch();
         } else {
-            printf("Erro: A mesa esta cheia!\n");
+            textoCentroJogCor(10, RED, "Erro: A mesa esta cheia!");
+            _getch();
             break;
         }
     }
 }
 
-int realizarJogada(tp_fila *f, Casa *inicioTabuleiro) {
+int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
     tp_item j;
+    char log[150];
 
     if (!removeFila(f, &j)) {
         return 0;
     }
 
-    system("cls");
-    desenharTabuleiro(inicioTabuleiro, f, &j);
+    limparTela();
+
+    desenharTelaJogo(
+        inicioTabuleiro,
+        f,
+        &j,
+        historico,
+        "Inicio da rodada",
+        0
+    );
 
     if (j.preso == 1) {
-        pos_jog(40, 22);
-        printf(RED "%s esta preso e perdeu esta rodada!" RESET, j.nome);
+        sprintf(log, "%s perdeu a rodada porque estava preso", j.nome);
+        adicionarLog(historico, log);
+
+        limparTela();
+
+        desenharTelaJogo(
+            inicioTabuleiro,
+            f,
+            &j,
+            historico,
+            "Jogador preso: perdeu a rodada",
+            0
+        );
 
         j.preso = 0;
         insereFila(f, j);
 
-        pos_jog(40, 24);
-        printf("Pressione qualquer tecla para continuar...");
+        textoCentroJogCor(40, RED, "O jogador esta preso e perdeu esta rodada!");
+        textoCentroJog(42, "Pressione qualquer tecla para continuar...");
+
         _getch();
 
         return 0;
     }
 
-    pos_jog(40, 22);
-    printf(YELLOW ">>> VEZ DE: " RESET);
-    printf("%s%s" RESET, codigoCorJogador(j.cor), j.nome);
+    menuAcaoRodada(inicioTabuleiro, f, &j, historico);
 
-    pos_jog(40, 24);
-    printf("Casa atual: %d - %s", j.casaAtual->id, j.casaAtual->nome);
+    limparTela();
 
-    pos_jog(40, 26);
-    printf("Pressione ENTER para girar o dado...");
+    desenharTelaJogo(
+        inicioTabuleiro,
+        f,
+        &j,
+        historico,
+        "Rolando o dado",
+        0
+    );
 
-    while (_getch() != ENTER);
+    int dado = animarRolagemDado(92, 34);
 
-    int dado = animarRolagemDado(92, 22);
+    sprintf(log, "%s tirou %d no dado", j.nome, dado);
+    adicionarLog(historico, log);
 
-    j.casaAtual = moverCasas(j.casaAtual, dado);
+    j.casaAtual = animarMovimento(
+        inicioTabuleiro,
+        f,
+        &j,
+        historico,
+        dado,
+        "Avancando no tabuleiro."
+    );
 
-    system("cls");
-    desenharTabuleiro(inicioTabuleiro, f, &j);
+    sprintf(log, "%s foi para a casa %d", j.nome, j.casaAtual->id);
+    adicionarLog(historico, log);
 
-    pos_jog(40, 22);
-    printf(YELLOW ">>> VEZ DE: " RESET);
-    printf("%s%s" RESET, codigoCorJogador(j.cor), j.nome);
+    limparTela();
 
-    pos_jog(40, 24);
-    printf(CYAN "Dado: %d" RESET, dado);
-
-    pos_jog(40, 26);
-    printf("O jogador avancou para a casa %d - %s", j.casaAtual->id, j.casaAtual->nome);
-
-    pos_jog(40, 28);
-    printf("---------------------------------------");
+    desenharTelaJogo(
+        inicioTabuleiro,
+        f,
+        &j,
+        historico,
+        "Movimento finalizado",
+        dado
+    );
 
     if (j.casaAtual->tipo == PRISAO) {
-        pos_jog(40, 30);
-        printf(RED "Voce caiu na PRISAO! Vai perder a proxima rodada." RESET);
+        sprintf(log, "%s caiu na prisao", j.nome);
+        adicionarLog(historico, log);
 
         j.preso = 1;
 
-        pos_jog(40, 32);
-        printf("Pressione qualquer tecla para continuar...");
+        limparTela();
+
+        desenharTelaJogo(
+            inicioTabuleiro,
+            f,
+            &j,
+            historico,
+            "Caiu na prisao: perde a proxima rodada",
+            dado
+        );
+
+        textoCentroJogCor(40, RED, "Voce caiu na PRISAO! Vai perder a proxima rodada.");
+        textoCentroJog(42, "Pressione qualquer tecla para continuar...");
+
         _getch();
     }
     else if (j.casaAtual->tipo == PERGUNTA) {
         int casasAcerto = 0;
         int casasErro = 0;
 
-        pos_jog(40, 30);
-        printf(YELLOW "Voce caiu em uma casa de pergunta!" RESET);
+        sprintf(log, "%s caiu em uma casa de pergunta", j.nome);
+        adicionarLog(historico, log);
 
-        pos_jog(40, 32);
-        printf("Pressione qualquer tecla para escolher a dificuldade...");
+        limparTela();
+
+        desenharTelaJogo(
+            inicioTabuleiro,
+            f,
+            &j,
+            historico,
+            "Casa de pergunta: escolha a dificuldade",
+            dado
+        );
+
+        textoCentroJogCor(40, YELLOW, "Voce caiu em uma casa de pergunta!");
+        textoCentroJog(42, "Pressione qualquer tecla para escolher a dificuldade...");
+
         _getch();
 
         NivelPergunta nivelEscolhido = escolherDificuldadePergunta();
@@ -416,52 +720,86 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro) {
             casasErro = 3;
         }
 
+        sprintf(log, "%s escolheu pergunta %s", j.nome, nomeNivel(nivelEscolhido));
+        adicionarLog(historico, log);
+
         int acertou = responderPerguntaNivel(nivelEscolhido);
 
         if (acertou) {
-            j.casaAtual = moverCasas(j.casaAtual, casasAcerto);
+            sprintf(log, "%s acertou e avancou %d casas", j.nome, casasAcerto);
+            adicionarLog(historico, log);
 
-            system("cls");
-            desenharTabuleiro(inicioTabuleiro, f, &j);
+            j.casaAtual = animarMovimento(
+                inicioTabuleiro,
+                f,
+                &j,
+                historico,
+                casasAcerto,
+                "Resposta correta."
+            );
 
-            pos_jog(35, 22);
-            printf(GREEN "Voce acertou! Avancou %d casas." RESET, casasAcerto);
+            limparTela();
+
+            desenharTelaJogo(
+                inicioTabuleiro,
+                f,
+                &j,
+                historico,
+                "Acertou a pergunta",
+                dado
+            );
+
+            char msg[100];
+            sprintf(msg, "Voce acertou! Avancou %d casas.", casasAcerto);
+            textoCentroJogCor(40, GREEN, msg);
         } else {
-            j.casaAtual = moverCasas(j.casaAtual, -casasErro);
+            sprintf(log, "%s errou e voltou %d casas", j.nome, casasErro);
+            adicionarLog(historico, log);
 
-            system("cls");
-            desenharTabuleiro(inicioTabuleiro, f, &j);
+            j.casaAtual = animarMovimento(
+                inicioTabuleiro,
+                f,
+                &j,
+                historico,
+                -casasErro,
+                "Resposta errada."
+            );
 
-            pos_jog(35, 22);
-            printf(RED "Voce errou! Voltou %d casas." RESET, casasErro);
+            limparTela();
+
+            desenharTelaJogo(
+                inicioTabuleiro,
+                f,
+                &j,
+                historico,
+                "Errou a pergunta",
+                dado
+            );
+
+            char msg[100];
+            sprintf(msg, "Voce errou! Voltou %d casas.", casasErro);
+            textoCentroJogCor(40, RED, msg);
         }
 
-        pos_jog(35, 24);
-        printf("Nova casa: %d - %s", j.casaAtual->id, j.casaAtual->nome);
+        char novaCasa[100];
+        sprintf(novaCasa, "Nova casa: %d - %s", j.casaAtual->id, j.casaAtual->nome);
+        textoCentroJog(42, novaCasa);
 
-        pos_jog(35, 26);
-        printf("Pressione qualquer tecla para continuar...");
+        textoCentroJog(44, "Pressione qualquer tecla para continuar...");
+
         _getch();
     }
 
     if (j.casaAtual->id >= 30) {
-        system("cls");
-        desenharTabuleiro(inicioTabuleiro, f, &j);
+        sprintf(log, "%s venceu o jogo", j.nome);
+        adicionarLog(historico, log);
 
-        pos_jog(35, 22);
-        printf(GREEN "==========================================" RESET);
-
-        pos_jog(35, 23);
-        printf(GREEN "   PARABENS! " RESET);
-        printf("%s%s" RESET, codigoCorJogador(j.cor), j.nome);
-        printf(GREEN " VENCEU O JOGO!   " RESET);
-
-        pos_jog(35, 24);
-        printf(GREEN "==========================================" RESET);
+        telaVitoria(inicioTabuleiro, f, &j, historico);
 
         return 1;
     }
 
     insereFila(f, j);
+
     return 0;
 }
