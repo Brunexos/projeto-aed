@@ -105,7 +105,7 @@ void telaApresentacao() {
     imprimirCentralizadoCor(9, WHITE, "- Rafael Prado");
     imprimirCentralizadoCor(10, WHITE, "- Felipe Cardim");
     imprimirCentralizadoCor(11, WHITE, "- Nicolas Jezler");
-    imprimirCentralizadoCor(12, WHITE, "- Samuel");
+    imprimirCentralizadoCor(12, WHITE, "- Samuel Dias");
 
     imprimirCentralizado(25, "Carregando o arsenal...");
 
