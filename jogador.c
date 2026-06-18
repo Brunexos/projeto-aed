@@ -3,6 +3,8 @@
 #include "tabuleiro.h"
 #include "visual.h"
 #include "historico.h"
+#include "arvore_casas.h"
+#include "ranking.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -345,6 +347,99 @@ static const char* nomeNivel(NivelPergunta nivel) {
     return "DIFICIL";
 }
 
+static void atualizarPosicaoJogador(tp_item *jogador) {
+    if (jogador != NULL && jogador->casaAtual != NULL) {
+        jogador->posicaoAtual = jogador->casaAtual->id;
+    }
+}
+
+static void registrarQuedaJogador(NoCasa **arvoreQuedas, tp_item *jogador) {
+    atualizarPosicaoJogador(jogador);
+
+    if (arvoreQuedas != NULL && jogador != NULL && jogador->casaAtual != NULL) {
+        registrarQuedaCasa(arvoreQuedas, jogador->casaAtual->id);
+    }
+}
+
+static int pontosPorNivel(NivelPergunta nivel) {
+    if (nivel == FACIL) {
+        return 10;
+    }
+
+    if (nivel == MEDIO) {
+        return 20;
+    }
+
+    return 30;
+}
+
+static int coletarJogadoresFinais(tp_fila *fila, tp_item *vencedor, tp_item jogadores[], int limite) {
+    int quantidade = 0;
+
+    if (vencedor != NULL && quantidade < limite) {
+        atualizarPosicaoJogador(vencedor);
+        jogadores[quantidade] = *vencedor;
+        quantidade++;
+    }
+
+    if (fila == NULL) {
+        return quantidade;
+    }
+
+    int idx = fila->ini;
+
+    while (idx != fila->fim && quantidade < limite) {
+        idx = (idx == MAXF - 1) ? 0 : idx + 1;
+
+        tp_item jogador = fila->item[idx];
+        atualizarPosicaoJogador(&jogador);
+        jogadores[quantidade] = jogador;
+        quantidade++;
+    }
+
+    return quantidade;
+}
+
+static void finalizarPartida(
+    tp_fila *fila,
+    tp_item *vencedor,
+    NoCasa *arvoreQuedas
+) {
+    tp_item jogadores[MAXF];
+    int quantidade = coletarJogadoresFinais(fila, vencedor, jogadores, MAXF);
+    int idPartida = obterProximoIdPartida();
+
+    ordenarJogadoresPartida(jogadores, quantidade);
+    salvarRankingPartidaCSV(idPartida, jogadores, quantidade);
+    salvarQuedasCasasCSV(arvoreQuedas, "quedas_casas.csv");
+
+    limparTela();
+    printf("\033[?25h");
+
+    printf("Partida %d finalizada.\n\n", idPartida);
+    exibirRankingPartida(jogadores, quantidade, vencedor->nome);
+    atualizarSalvarExibirRankingGeral(jogadores, quantidade);
+
+    printf("\n============== QUEDAS NAS CASAS ==============\n");
+
+    if (arvoreQuedas == NULL) {
+        printf("Nenhuma queda registrada.\n");
+    } else {
+        exibirQuedasCasas(arvoreQuedas);
+    }
+
+    printf("\nArquivos atualizados:\n");
+    printf("- historico_respostas.csv\n");
+    printf("- ranking_partidas.csv\n");
+    printf("- ranking_geral.csv\n");
+    printf("- quedas_casas.csv\n");
+
+    printf("\nPressione qualquer tecla para voltar ao menu...");
+    _getch();
+
+    printf("\033[?25l");
+}
+
 static Casa* animarMovimento(
     Casa *inicioTabuleiro,
     tp_fila *fila,
@@ -427,7 +522,7 @@ static void telaVitoria(Casa *inicioTabuleiro, tp_fila *fila, tp_item *vencedor,
         posicao++;
     }
 
-    textoCentroJogCor(linhaY + 2, YELLOW, "Pressione qualquer tecla para voltar ao menu...");
+    textoCentroJogCor(linhaY + 2, YELLOW, "Pressione qualquer tecla para ver os relatorios finais...");
 
     _getch();
 }
@@ -488,6 +583,10 @@ void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro) {
 
         novo.id = i;
         novo.casaAtual = inicioTabuleiro;
+        novo.posicaoAtual = (inicioTabuleiro != NULL) ? inicioTabuleiro->id : 0;
+        novo.pontuacao = 0;
+        novo.acertos = 0;
+        novo.erros = 0;
         novo.preso = 0;
 
         limparTela();
@@ -574,7 +673,7 @@ void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro) {
     }
 }
 
-int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
+int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico, NoCasa **arvoreQuedas) {
     tp_item j;
     char log[150];
 
@@ -645,6 +744,7 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
         dado,
         "Avancando no tabuleiro."
     );
+    registrarQuedaJogador(arvoreQuedas, &j);
 
     sprintf(log, "%s foi para a casa %d", j.nome, j.casaAtual->id);
     adicionarLog(historico, log);
@@ -723,9 +823,21 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
         sprintf(log, "%s escolheu pergunta %s", j.nome, nomeNivel(nivelEscolhido));
         adicionarLog(historico, log);
 
-        int acertou = responderPerguntaNivel(nivelEscolhido);
+        ResultadoPergunta resultadoPergunta;
+        int acertou = responderPerguntaNivelDetalhado(nivelEscolhido, &resultadoPergunta);
+        int pontos = pontosPorNivel(nivelEscolhido);
+
+        salvarRespostaHistoricoCSV(
+            TURMA_PADRAO,
+            GRUPO_PADRAO,
+            j.nome,
+            &resultadoPergunta
+        );
 
         if (acertou) {
+            j.acertos++;
+            j.pontuacao += pontos;
+
             sprintf(log, "%s acertou e avancou %d casas", j.nome, casasAcerto);
             adicionarLog(historico, log);
 
@@ -737,6 +849,7 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
                 casasAcerto,
                 "Resposta correta."
             );
+            registrarQuedaJogador(arvoreQuedas, &j);
 
             limparTela();
 
@@ -753,6 +866,13 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
             sprintf(msg, "Voce acertou! Avancou %d casas.", casasAcerto);
             textoCentroJogCor(40, GREEN, msg);
         } else {
+            j.erros++;
+            j.pontuacao -= pontos / 2;
+
+            if (j.pontuacao < 0) {
+                j.pontuacao = 0;
+            }
+
             sprintf(log, "%s errou e voltou %d casas", j.nome, casasErro);
             adicionarLog(historico, log);
 
@@ -764,6 +884,7 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
                 -casasErro,
                 "Resposta errada."
             );
+            registrarQuedaJogador(arvoreQuedas, &j);
 
             limparTela();
 
@@ -781,8 +902,8 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
             textoCentroJogCor(40, RED, msg);
         }
 
-        char novaCasa[100];
-        sprintf(novaCasa, "Nova casa: %d - %s", j.casaAtual->id, j.casaAtual->nome);
+        char novaCasa[150];
+        snprintf(novaCasa, sizeof(novaCasa), "Nova casa: %d - %s", j.casaAtual->id, j.casaAtual->nome);
         textoCentroJog(42, novaCasa);
 
         textoCentroJog(44, "Pressione qualquer tecla para continuar...");
@@ -795,10 +916,12 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico) {
         adicionarLog(historico, log);
 
         telaVitoria(inicioTabuleiro, f, &j, historico);
+        finalizarPartida(f, &j, (arvoreQuedas != NULL) ? *arvoreQuedas : NULL);
 
         return 1;
     }
 
+    atualizarPosicaoJogador(&j);
     insereFila(f, j);
 
     return 0;

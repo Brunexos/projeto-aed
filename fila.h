@@ -18,6 +18,10 @@ typedef struct {
     int id;
     char nome[50];
     Casa *casaAtual;
+    int posicaoAtual;
+    int pontuacao;
+    int acertos;
+    int erros;
     CorJogador cor;
     int preso;
 } Jogador;

@@ -1,5 +1,5 @@
 // Comando para compilar e rodar:
-// gcc main.c fila.c jogador.c pilha.c questoes.c tabuleiro.c visual.c historico.c listade.c -o jogo.exe; if ($?) { .\jogo.exe }
+// gcc main.c fila.c jogador.c pilha.c questoes.c tabuleiro.c visual.c historico.c listade.c arvore_casas.c ranking.c -o jogo.exe; if ($?) { .\jogo.exe }
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +12,7 @@
 #include "tabuleiro.h"
 #include "visual.h"
 #include "historico.h"
+#include "ranking.h"
 
 #ifdef _WIN32
     #include <windows.h>
@@ -178,7 +179,7 @@ void desenharMenuPrincipal(int selecionado) {
     printf("| %s 3. Sair" RESET "                       |", selecionado == 3 ? RED " >" : "  ");
 
     irPara(xMenu, yMenu + 7);
-    printf("| %s 4. Teste de Questoes" RESET "          |", selecionado == 4 ? CYAN " >" : "  ");
+    printf("| %s 4. Ver Ranking Geral" RESET "          |", selecionado == 4 ? CYAN " >" : "  ");
 
     irPara(xMenu, yMenu + 9);
     printf("+------------------------------------------+");
@@ -209,6 +210,7 @@ int main(int argc, char *argv[]) {
     Casa *fimTabuleiro = NULL;
 
     criarTabuleiroPadrao(&inicioTabuleiro, &fimTabuleiro);
+    salvarPerguntasCSV();
 
     int selecionado = 1;
     int tecla = 0;
@@ -246,6 +248,9 @@ int main(int argc, char *argv[]) {
 
                     inicializaFila(&mesa);
                     inicializarHistorico(&historicoPartida);
+                    inicializarHistoricoRespostasCSV();
+
+                    NoCasa *arvoreQuedas = NULL;
 
                     adicionarLog(&historicoPartida, "Partida iniciada");
 
@@ -261,7 +266,7 @@ int main(int argc, char *argv[]) {
                         while (fimDeJogo == 0) {
                             system("cls");
 
-                            fimDeJogo = realizarJogada(&mesa, inicioTabuleiro, &historicoPartida);
+                            fimDeJogo = realizarJogada(&mesa, inicioTabuleiro, &historicoPartida, &arvoreQuedas);
 
                             if (fimDeJogo == 0) {
                                 imprimirCentralizadoCor(52, WHITE, "Pressione qualquer tecla para a proxima jogada...");
@@ -269,6 +274,8 @@ int main(int argc, char *argv[]) {
                             }
                         }
                     }
+
+                    liberarArvoreCasas(arvoreQuedas);
 
                     break;
 
@@ -284,8 +291,12 @@ int main(int argc, char *argv[]) {
                     break;
 
                 case 4:
-                    QuestoesJogo();
-                    system("pause");
+                    system("cls");
+                    printf("\033[?25h");
+                    exibirRankingGeralSalvo();
+                    imprimirCentralizadoCor(30, CYAN, "Pressione qualquer tecla para voltar...");
+                    _getch();
+                    printf("\033[?25l");
                     break;
             }
         }

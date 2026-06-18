@@ -5,12 +5,25 @@
 #include "tabuleiro.h"
 
 typedef struct {
-    char pergunta[500];
+    int id;
+    char unidade[100];
+    char tema[100];
+    char subtema[100];
+    char dificuldade[20];
+    char enunciado[500];
     char alternativas[4][500];
     int respostaCorreta;
 } Questao;
 
+typedef struct {
+    Questao questao;
+    int respostaJogador;
+    int acertou;
+} ResultadoPergunta;
+
 void QuestoesJogo();
 int responderPerguntaNivel(NivelPergunta nivel);
+int responderPerguntaNivelDetalhado(NivelPergunta nivel, ResultadoPergunta *resultado);
+void salvarPerguntasCSV();
 
 #endif

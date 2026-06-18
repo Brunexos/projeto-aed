@@ -36,16 +36,31 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
     // FACEIS - indices 0 a 3
     // =====================================================
     {
+        1,
+        "1",
+        "Tipos de Dados",
+        "Inteiros",
+        "Facil",
         "Para que serve declarar int?",
         {"Reais", "Palavras", "Inteiros", "Imprimir"},
         2
     },
     {
+        2,
+        "1",
+        "Pilha",
+        "LIFO",
+        "Facil",
         "Elemento sai de onde na pilha?",
         {"Baixo", "Cima", "Meio", "Aleatorio"},
         1
     },
     {
+        3,
+        "2",
+        "Lista Encadeada",
+        "Estrutura do no",
+        "Facil",
         "Qual e a principal caracteristica de uma lista simplesmente encadeada?",
         {
             "O tamanho da lista e fixo e deve ser definido no momento de sua criacao.",
@@ -56,6 +71,11 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
         2
     },
     {
+        4,
+        "2",
+        "Lista Duplamente Encadeada",
+        "Ponteiro anterior",
+        "Facil",
         "Em uma lista duplamente encadeada padrao, para onde aponta o ponteiro anterior do primeiro no?",
         {
             "Para si mesmo.",
@@ -70,16 +90,31 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
     // MEDIAS - indices 4 a 7
     // =====================================================
     {
+        5,
+        "1",
+        "Pilha",
+        "Topo",
+        "Medio",
         "Qual o valor do topo inicial de uma pilha vazia?",
         {"1", "-1", "0", "2"},
         1
     },
     {
+        6,
+        "1",
+        "Ponteiros",
+        "Ponteiro para ponteiro",
+        "Medio",
         "O que int **p armazena?",
         {"Valor comum", "Endereco de ponteiro", "Texto", "Erro sempre"},
         1
     },
     {
+        7,
+        "2",
+        "Lista Encadeada",
+        "Insercao no inicio",
+        "Medio",
         "Qual e a complexidade para inserir um no no inicio de uma lista simplesmente encadeada, tendo referencia para a cabeca?",
         {
             "O(n^2)",
@@ -90,6 +125,11 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
         2
     },
     {
+        8,
+        "2",
+        "Lista Duplamente Encadeada",
+        "Remocao",
+        "Medio",
         "Ao remover um no do meio de uma lista duplamente encadeada, quantos ponteiros de nos vizinhos precisam ser alterados?",
         {
             "4 ou mais ponteiros",
@@ -104,16 +144,31 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
     // DIFICIES - indices 8 a 11
     // =====================================================
     {
+        9,
+        "1",
+        "Ponteiros",
+        "Ponteiro para funcao",
+        "Dificil",
         "Sintaxe correta de ponteiro para funcao?",
         {"void *f(int);", "void (*ptr)(int);", "func ptr(int);", "void ptr(int)*;"},
         1
     },
     {
+        10,
+        "1",
+        "Pilha",
+        "Overflow",
+        "Dificil",
         "Push em pilha cheia gera?",
         {"Substituicao", "Overflow", "Redimensionamento automatico", "Insercao na base"},
         1
     },
     {
+        11,
+        "2",
+        "Lista Encadeada",
+        "Ciclo",
+        "Dificil",
         "O algoritmo de Floyd, tambem chamado de ponteiro rapido e lento, e usado principalmente para:",
         {
             "Detectar se a lista possui um ciclo.",
@@ -124,6 +179,11 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
         0
     },
     {
+        12,
+        "2",
+        "Lista Duplamente Encadeada",
+        "Memoria",
+        "Dificil",
         "Comparando com listas simplesmente encadeadas, qual e a principal desvantagem das listas duplamente encadeadas?",
         {
             "E impossivel implementar uma fila eficiente com ela.",
@@ -241,7 +301,72 @@ static const char* corNivelPergunta(NivelPergunta nivel) {
     }
 }
 
-static int mostrarPerguntaNaTela(Questao escolhida, NivelPergunta nivel) {
+static void copiarCampoQuestoesCSV(char *destino, const char *origem, int tamanhoDestino) {
+    int i = 0;
+
+    if (tamanhoDestino <= 0) {
+        return;
+    }
+
+    if (origem == NULL) {
+        destino[0] = '\0';
+        return;
+    }
+
+    while (origem[i] != '\0' && i < tamanhoDestino - 1) {
+        if (origem[i] == ';' || origem[i] == '\n' || origem[i] == '\r') {
+            destino[i] = ' ';
+        } else {
+            destino[i] = origem[i];
+        }
+
+        i++;
+    }
+
+    destino[i] = '\0';
+}
+
+void salvarPerguntasCSV() {
+    FILE *arquivo = fopen("perguntas.csv", "w");
+
+    if (arquivo == NULL) {
+        printf("Erro ao criar o arquivo perguntas.csv.\n");
+        return;
+    }
+
+    fprintf(arquivo, "id_pergunta;unidade;tema;subtema;dificuldade;enunciado\n");
+
+    for (int i = 0; i < TOTAL_PERGUNTAS; i++) {
+        char idPergunta[10];
+        char unidadeCSV[100];
+        char temaCSV[100];
+        char subtemaCSV[100];
+        char dificuldadeCSV[30];
+        char enunciadoCSV[500];
+
+        snprintf(idPergunta, sizeof(idPergunta), "P%03d", bancoPerguntas[i].id);
+        copiarCampoQuestoesCSV(unidadeCSV, bancoPerguntas[i].unidade, sizeof(unidadeCSV));
+        copiarCampoQuestoesCSV(temaCSV, bancoPerguntas[i].tema, sizeof(temaCSV));
+        copiarCampoQuestoesCSV(subtemaCSV, bancoPerguntas[i].subtema, sizeof(subtemaCSV));
+        copiarCampoQuestoesCSV(dificuldadeCSV, bancoPerguntas[i].dificuldade, sizeof(dificuldadeCSV));
+        copiarCampoQuestoesCSV(enunciadoCSV, bancoPerguntas[i].enunciado, sizeof(enunciadoCSV));
+
+        fprintf(
+            arquivo,
+            "%s;%s;%s;%s;%s;%s\n",
+            idPergunta,
+            unidadeCSV,
+            temaCSV,
+            subtemaCSV,
+            dificuldadeCSV,
+            enunciadoCSV
+        );
+    }
+
+    fclose(arquivo);
+}
+
+static int mostrarPerguntaNaTela(Questao escolhida, NivelPergunta nivel, int *respostaJogador) {
     int selecionado = 0;
     int tecla = 0;
 
@@ -252,7 +377,7 @@ static int mostrarPerguntaNaTela(Questao escolhida, NivelPergunta nivel) {
         printf("%s--- PERGUNTA %s ---%s", corNivelPergunta(nivel), nomeNivelPergunta(nivel), RESET);
 
         posicionar(18, 8);
-        printf(WHITE "%s" RESET, escolhida.pergunta);
+        printf(WHITE "%s" RESET, escolhida.enunciado);
 
         for (int i = 0; i < 4; i++) {
             posicionar(22, 11 + i);
@@ -278,6 +403,10 @@ static int mostrarPerguntaNaTela(Questao escolhida, NivelPergunta nivel) {
         }
         else if (tecla == ENTER) {
             posicionar(45, 17);
+
+            if (respostaJogador != NULL) {
+                *respostaJogador = selecionado;
+            }
 
             if (selecionado == escolhida.respostaCorreta) {
                 printf(GREEN "CORRETO!" RESET);
@@ -314,7 +443,7 @@ void jogar(tp_pilha *p, Questao *banco, char *nivel) {
         printf(YELLOW "--- DESAFIO: %s ---" RESET, nivel);
 
         posicionar(18, 8);
-        printf(WHITE "%s" RESET, banco[indice].pergunta);
+        printf(WHITE "%s" RESET, banco[indice].enunciado);
 
         for (int i = 0; i < 4; i++) {
             posicionar(22, 11 + i);
@@ -438,7 +567,7 @@ void QuestoesJogo() {
 
 // Essa e a funcao usada dentro da partida
 // Agora ela usa PILHA, nao sorteio direto
-int responderPerguntaNivel(NivelPergunta nivel) {
+int responderPerguntaNivelDetalhado(NivelPergunta nivel, ResultadoPergunta *resultado) {
     if (!pilhasInicializadas) {
         inicializarPilhasPerguntas();
     }
@@ -455,6 +584,18 @@ int responderPerguntaNivel(NivelPergunta nivel) {
     pop(pilhaEscolhida, &indicePergunta);
 
     Questao escolhida = bancoPerguntas[indicePergunta];
+    int respostaJogador = -1;
+    int acertou = mostrarPerguntaNaTela(escolhida, nivel, &respostaJogador);
 
-    return mostrarPerguntaNaTela(escolhida, nivel);
+    if (resultado != NULL) {
+        resultado->questao = escolhida;
+        resultado->respostaJogador = respostaJogador;
+        resultado->acertou = acertou;
+    }
+
+    return acertou;
+}
+
+int responderPerguntaNivel(NivelPergunta nivel) {
+    return responderPerguntaNivelDetalhado(nivel, NULL);
 }

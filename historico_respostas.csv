@@ -1,0 +1,9 @@
+turma;grupo;nome_jogador;id_pergunta;unidade;tema;subtema;dificuldade;resposta_jogador;resposta_correta;resultado
+AED;ARSENAI;C‚sar;2;Unidade 2;Estruturas lineares;Pilha;FACIL;Baixo;Cima;Errou
+AED;ARSENAI;C‚sar;4;Unidade 2;Estruturas lineares;Lista dupla;FACIL;Para si mesmo.;Para nulo.;Errou
+AED;ARSENAI;Bruno;1;Unidade 1;Linguagem C;Tipos de dados;FACIL;Reais;Inteiros;Errou
+AED;ARSENAI;Bruno;3;Unidade 2;Estruturas lineares;Lista simples;FACIL;O tamanho da lista e fixo e deve ser definido no momento de sua criacao.;Cada no contem um valor e um ponteiro para o proximo no.;Errou
+AED;ARSENAI;Bruno;12;Unidade 2;Estruturas lineares;Lista dupla;DIFICIL;Maior consumo de memoria por no, pois armazena dois enderecos em vez de um.;Maior consumo de memoria por no, pois armazena dois enderecos em vez de um.;Acertou
+AED;2026.1;Bruno;P007;2;Lista Encadeada;Insercao no inicio;Medio;C;C;Acertou
+AED;2026.1;Cesar;P004;2;Lista Duplamente Encadeada;Ponteiro anterior;Facil;D;D;Acertou
+AED;2026.1;Bruno;P003;2;Lista Encadeada;Estrutura do no;Facil;C;C;Acertou
