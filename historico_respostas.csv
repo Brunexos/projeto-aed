@@ -7,3 +7,7 @@ AED;ARSENAI;Bruno;12;Unidade 2;Estruturas lineares;Lista dupla;DIFICIL;Maior con
 AED;2026.1;Bruno;P007;2;Lista Encadeada;Insercao no inicio;Medio;C;C;Acertou
 AED;2026.1;Cesar;P004;2;Lista Duplamente Encadeada;Ponteiro anterior;Facil;D;D;Acertou
 AED;2026.1;Bruno;P003;2;Lista Encadeada;Estrutura do no;Facil;C;C;Acertou
+AED;2026.1;Karen;P002;1;Pilha;LIFO;Facil;B;B;Acertou
+AED;2026.1;Karen;P003;2;Lista Encadeada;Estrutura do no;Facil;C;C;Acertou
+AED;2026.1;Karen;P004;2;Lista Duplamente Encadeada;Ponteiro anterior;Facil;B;D;Errou
+AED;2026.1;Karen;P001;1;Tipos de Dados;Inteiros;Facil;C;C;Acertou

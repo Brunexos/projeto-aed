@@ -673,7 +673,13 @@ void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro) {
     }
 }
 
-int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico, NoCasa **arvoreQuedas) {
+int realizarJogada(
+    tp_fila *f,
+    Casa *inicioTabuleiro,
+    Historico *historico,
+    NoCasa **arvoreQuedas,
+    const char *grupoHistorico
+) {
     tp_item j;
     char log[150];
 
@@ -829,7 +835,7 @@ int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico, NoCa
 
         salvarRespostaHistoricoCSV(
             TURMA_PADRAO,
-            GRUPO_PADRAO,
+            (grupoHistorico != NULL && grupoHistorico[0] != '\0') ? grupoHistorico : GRUPO_PADRAO,
             j.nome,
             &resultadoPergunta
         );

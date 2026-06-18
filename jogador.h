@@ -13,6 +13,12 @@
 #define RESET   "\x1b[0m"
 
 void cadastrarJogadores(tp_fila *f, Casa *inicioTabuleiro);
-int realizarJogada(tp_fila *f, Casa *inicioTabuleiro, Historico *historico, NoCasa **arvoreQuedas);
+int realizarJogada(
+    tp_fila *f,
+    Casa *inicioTabuleiro,
+    Historico *historico,
+    NoCasa **arvoreQuedas,
+    const char *grupoHistorico
+);
 
 #endif

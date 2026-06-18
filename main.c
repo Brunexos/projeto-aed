@@ -187,6 +187,57 @@ void desenharMenuPrincipal(int selecionado) {
     imprimirCentralizadoCor(yMenu + 12, WHITE, "Use as setas para subir/descer e ENTER para selecionar");
 }
 
+void escolherGrupoHistorico(char *grupoEscolhido, int tamanhoGrupo) {
+    const char *opcoes[] = {
+        "2026.1",
+        "professor",
+        "outro_semestre"
+    };
+
+    int selecionado = 0;
+    int tecla = 0;
+    int totalOpcoes = 3;
+
+    while (1) {
+        system("cls");
+
+        imprimirCentralizadoCor(6, YELLOW, "============== SELECIONE O GRUPO ==============");
+        imprimirCentralizado(8, "Esse valor sera salvo na coluna grupo do historico_respostas.csv");
+
+        int xMenu = centroX(34);
+
+        for (int i = 0; i < totalOpcoes; i++) {
+            irPara(xMenu, 11 + i * 2);
+
+            if (selecionado == i) {
+                printf(CYAN " > %s" RESET, opcoes[i]);
+            } else {
+                printf("   %s", opcoes[i]);
+            }
+        }
+
+        imprimirCentralizadoCor(19, WHITE, "Use as setas para subir/descer e ENTER para selecionar");
+
+        tecla = _getch();
+
+        if (tecla == 0 || tecla == 224) {
+            tecla = _getch();
+
+            if (tecla == SETA_CIMA) {
+                selecionado = (selecionado <= 0) ? totalOpcoes - 1 : selecionado - 1;
+            }
+            else if (tecla == SETA_BAIXO) {
+                selecionado = (selecionado >= totalOpcoes - 1) ? 0 : selecionado + 1;
+            }
+        }
+        else if (tecla == ENTER) {
+            strncpy(grupoEscolhido, opcoes[selecionado], tamanhoGrupo - 1);
+            grupoEscolhido[tamanhoGrupo - 1] = '\0';
+            return;
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc == 1 || strcmp(argv[1], "jogo") != 0) {
         char comando[512];
@@ -244,6 +295,11 @@ int main(int argc, char *argv[]) {
         else if (tecla == ENTER) {
             switch (selecionado) {
                 case 1:
+                {
+                    char grupoHistorico[30];
+
+                    escolherGrupoHistorico(grupoHistorico, sizeof(grupoHistorico));
+
                     printf("\033[?25h");
 
                     inicializaFila(&mesa);
@@ -266,7 +322,13 @@ int main(int argc, char *argv[]) {
                         while (fimDeJogo == 0) {
                             system("cls");
 
-                            fimDeJogo = realizarJogada(&mesa, inicioTabuleiro, &historicoPartida, &arvoreQuedas);
+                            fimDeJogo = realizarJogada(
+                                &mesa,
+                                inicioTabuleiro,
+                                &historicoPartida,
+                                &arvoreQuedas,
+                                grupoHistorico
+                            );
 
                             if (fimDeJogo == 0) {
                                 imprimirCentralizadoCor(52, WHITE, "Pressione qualquer tecla para a proxima jogada...");
@@ -278,6 +340,7 @@ int main(int argc, char *argv[]) {
                     liberarArvoreCasas(arvoreQuedas);
 
                     break;
+                }
 
                 case 2:
                     telaRegrasPrincipal();
