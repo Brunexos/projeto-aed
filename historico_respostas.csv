@@ -16,3 +16,7 @@ AED;2026.1;Cardim;P001;1;Tipos de Dados;Inteiros;Facil;C;C;Acertou
 AED;2026.1;Bruno;P011;2;Lista Encadeada;Ciclo;Dificil;C;A;Errou
 AED;2026.1;Cardim;P012;2;Lista Duplamente Encadeada;Memoria;Dificil;C;C;Acertou
 AED;2026.1;Cardim;P009;1;Ponteiros;Ponteiro para funcao;Dificil;D;B;Errou
+AED;2026.1;C‚sar;P010;1;Pilha;Overflow;Dificil;B;B;Acertou
+AED;2026.1;Bruno;P011;2;Lista Encadeada;Ciclo;Dificil;B;A;Errou
+AED;2026.1;Bruno;P002;1;Pilha;LIFO;Facil;B;B;Acertou
+AED;2026.1;Bruno;P003;2;Lista Encadeada;Estrutura do no;Facil;C;C;Acertou
