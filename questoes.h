@@ -25,8 +25,11 @@ void QuestoesJogo();
 int responderPerguntaNivel(NivelPergunta nivel);
 int responderPerguntaNivelDetalhado(NivelPergunta nivel, ResultadoPergunta *resultado);
 void salvarPerguntasCSV();
+void reiniciarPerguntasJogo();
 int totalPerguntasJogo();
 const Questao* obterQuestaoPorIndice(int indice);
 int sortearIndicePerguntaNivel(NivelPergunta nivel);
+int quantidadePerguntasRestantesNivel(NivelPergunta nivel);
+int consumirIndicePerguntaNivel(NivelPergunta nivel);
 
 #endif

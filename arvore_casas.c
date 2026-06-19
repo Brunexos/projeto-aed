@@ -111,6 +111,22 @@ void registrarQuedaCasa(NoCasa **raiz, int idCasa) {
     *raiz = inserirOuIncrementar(*raiz, idCasa);
 }
 
+int quantidadeQuedasCasa(NoCasa *raiz, int idCasa) {
+    if (raiz == NULL) {
+        return 0;
+    }
+
+    if (idCasa < raiz->idCasa) {
+        return quantidadeQuedasCasa(raiz->esquerda, idCasa);
+    }
+
+    if (idCasa > raiz->idCasa) {
+        return quantidadeQuedasCasa(raiz->direita, idCasa);
+    }
+
+    return raiz->quantidadeQuedas;
+}
+
 void exibirQuedasCasas(NoCasa *raiz) {
     if (raiz == NULL) {
         return;

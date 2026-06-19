@@ -10,6 +10,7 @@ typedef struct NoCasa {
 } NoCasa;
 
 void registrarQuedaCasa(NoCasa **raiz, int idCasa);
+int quantidadeQuedasCasa(NoCasa *raiz, int idCasa);
 void exibirQuedasCasas(NoCasa *raiz);
 void salvarQuedasCasasCSV(NoCasa *raiz, const char *nomeArquivo);
 void liberarArvoreCasas(NoCasa *raiz);

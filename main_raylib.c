@@ -1,7 +1,7 @@
 #include "raylib.h"
 // Compilar:
 // gcc main_raylib.c fila.c pilha.c questoes.c tabuleiro.c historico.c listade.c arvore_casas.c ranking.c -o jogo_gui.exe -lraylib -lopengl32 -lgdi32 -lwinmm -lm
-
+//   .\jogo_gui.exe
 #include "arvore_casas.h"
 #include "fila.h"
 #include "historico.h"
@@ -19,12 +19,15 @@
 #define CASA_FINAL 30
 #define MAX_RANKING_GUI 12
 #define MAX_TEMAS_GUI 12
-#define TAB_X 38
-#define TAB_Y 230
-#define TAB_TAM 78
-#define TAB_GAP 10
+#define TAB_X 42
+#define TAB_Y 202
+#define TAB_TAM 82
+#define TAB_GAP 18
+#define INTRO_PARTICULAS 240
+#define INTRO_DURACAO 7.2f
 
 typedef enum {
+    TELA_INTRO,
     TELA_MENU,
     TELA_GRUPO,
     TELA_CADASTRO,
@@ -90,14 +93,45 @@ typedef struct {
     TipoMovimentoGUI tipoMovimento;
 } AnimacaoGUI;
 
-static const Color COR_FUNDO = {22, 30, 38, 255};
-static const Color COR_PAINEL = {32, 44, 55, 255};
-static const Color COR_PAINEL_CLARO = {43, 59, 72, 255};
-static const Color COR_TEXTO = {238, 243, 247, 255};
-static const Color COR_TEXTO_FRACO = {170, 184, 195, 255};
-static const Color COR_DESTAQUE = {63, 195, 182, 255};
-static const Color COR_ALERTA = {238, 196, 94, 255};
-static const Color COR_ERRO = {229, 94, 94, 255};
+typedef struct {
+    Vector2 posicao;
+    Vector2 direcao;
+    float velocidade;
+    float raio;
+    float profundidade;
+    Color cor;
+} ParticulaIntroGUI;
+
+typedef struct {
+    float tempo;
+    int finalizada;
+    int audioPronto;
+    int musicaCarregada;
+    int logoSfxCarregado;
+    int transitionSfxCarregado;
+    int tocouLogo;
+    int tocouTransition;
+    ParticulaIntroGUI particulas[INTRO_PARTICULAS];
+    Music musica;
+    Sound logoSfx;
+    Sound transitionSfx;
+} IntroGUI;
+
+static const Color COR_FUNDO = {5, 6, 8, 255};
+static const Color COR_PAINEL = {16, 18, 22, 255};
+static const Color COR_PAINEL_CLARO = {27, 30, 36, 255};
+static const Color COR_TEXTO = {245, 247, 250, 255};
+static const Color COR_TEXTO_FRACO = {178, 184, 194, 255};
+static const Color COR_DESTAQUE = {255, 111, 0, 255};
+static const Color COR_LARANJA_CLARO = {255, 173, 51, 255};
+static const Color COR_PERGUNTA = {255, 149, 0, 255};
+static const Color COR_ALERTA = {255, 191, 71, 255};
+static const Color COR_ERRO = {230, 34, 34, 255};
+static const Color COR_EDAG = {238, 27, 36, 255};
+static const Color COR_TRILHA = {96, 58, 18, 255};
+static const Color COR_AZUL_PERGUNTA = {11, 53, 114, 255};
+static const Color COR_AZUL_ALTERNATIVA = {17, 66, 136, 255};
+static const Color COR_AZUL_ALTERNATIVA_HOVER = {28, 94, 176, 255};
 
 static Font fonteUI;
 static int fonteUICarregada = 0;
@@ -199,19 +233,19 @@ static void desenharTextoCentralizado(const char *texto, int y, int tamanho, Col
 
 static Color corCasa(TipoCasa tipo) {
     if (tipo == PRISAO) {
-        return COR_ERRO;
+        return COR_EDAG;
     }
 
     if (tipo == PERGUNTA) {
-        return COR_ALERTA;
+        return COR_PERGUNTA;
     }
 
-    return (Color){92, 114, 132, 255};
+    return COR_LARANJA_CLARO;
 }
 
 static const char* nomeTipoCasa(TipoCasa tipo) {
     if (tipo == PRISAO) {
-        return "Prisao";
+        return "EDAG";
     }
 
     if (tipo == PERGUNTA) {
@@ -275,6 +309,77 @@ static const char* nomeNivelGUI(NivelPergunta nivel) {
     return "Dificil";
 }
 
+static int quantidadePerguntasNivelGUI(NivelPergunta nivel) {
+    return quantidadePerguntasRestantesNivel(nivel);
+}
+
+static Casa* buscarCasaGUI(Casa *inicio, int idCasa) {
+    Casa *casa = inicio;
+
+    while (casa != NULL) {
+        if (casa->id == idCasa) {
+            return casa;
+        }
+
+        casa = casa->prox;
+    }
+
+    return NULL;
+}
+
+static void desenharTextoQuebrado(const char *texto, Rectangle area, int tamanho, Color cor) {
+    char palavra[160];
+    char linha[1200] = "";
+    int indice = 0;
+    float y = area.y;
+    float espacamentoLinha = tamanho + 8.0f;
+
+    if (texto == NULL) {
+        return;
+    }
+
+    for (int i = 0;; i++) {
+        char c = texto[i];
+
+        if (c != ' ' && c != '\0' && indice < (int)sizeof(palavra) - 1) {
+            palavra[indice++] = c;
+        }
+
+        if (c == ' ' || c == '\0') {
+            char teste[1400];
+            palavra[indice] = '\0';
+
+            if (linha[0] == '\0') {
+                snprintf(teste, sizeof(teste), "%s", palavra);
+            } else {
+                snprintf(teste, sizeof(teste), "%s %s", linha, palavra);
+            }
+
+            if (MeasureText(teste, tamanho) > area.width && linha[0] != '\0') {
+                DrawText(linha, (int)area.x, (int)y, tamanho, cor);
+                y += espacamentoLinha;
+                snprintf(linha, sizeof(linha), "%s", palavra);
+            } else {
+                strncpy(linha, teste, sizeof(linha) - 1);
+                linha[sizeof(linha) - 1] = '\0';
+            }
+
+            indice = 0;
+
+            if (c == '\0') {
+                if (linha[0] != '\0' && y + tamanho <= area.y + area.height) {
+                    DrawText(linha, (int)area.x, (int)y, tamanho, cor);
+                }
+                break;
+            }
+
+            if (y + tamanho > area.y + area.height) {
+                break;
+            }
+        }
+    }
+}
+
 static int encontrarPosicaoCasaGrid(int idCasa, int *linhaOut, int *colunaOut) {
     int ordem[6][6] = {
         {0, 1, 2, 3, 4, 5},
@@ -282,7 +387,7 @@ static int encontrarPosicaoCasaGrid(int idCasa, int *linhaOut, int *colunaOut) {
         {12, 13, 14, 15, 16, 17},
         {23, 22, 21, 20, 19, 18},
         {24, 25, 26, 27, 28, 29},
-        {30, -1, -1, -1, -1, -1}
+        {-1, -1, -1, -1, -1, 30}
     };
 
     for (int linha = 0; linha < 6; linha++) {
@@ -308,7 +413,7 @@ static Vector2 centroCasaTabuleiro(int idCasa) {
 
     return (Vector2){
         TAB_X + coluna * (TAB_TAM + TAB_GAP) + TAB_TAM / 2.0f,
-        TAB_Y + linha * (TAB_TAM + TAB_GAP) + TAB_TAM - 16.0f
+        TAB_Y + linha * (TAB_TAM + TAB_GAP) + TAB_TAM / 2.0f
     };
 }
 
@@ -317,6 +422,14 @@ static Vector2 interpolar(Vector2 a, Vector2 b, float t) {
         a.x + (b.x - a.x) * t,
         a.y + (b.y - a.y) * t
     };
+}
+
+static void desenharTextoCentroCasa(const char *texto, Vector2 centro, int y, int tamanho, Color cor) {
+    int larguraTexto = MeasureText(texto, tamanho);
+    int x = (int)(centro.x - larguraTexto / 2.0f);
+
+    DrawText(texto, x + 2, y + 2, tamanho, Fade(BLACK, 0.62f));
+    DrawText(texto, x, y, tamanho, cor);
 }
 
 static void desenharPeao(Vector2 posicao, Color cor, int ativo) {
@@ -370,6 +483,277 @@ static void desenharDadoGrafico(int x, int y, int tamanho, int valor, float angu
     if (valor == 6) {
         desenharPontoDado(centro, -desloc, 0, angulo, raioPonto);
         desenharPontoDado(centro, desloc, 0, angulo, raioPonto);
+    }
+}
+
+static float limitar01(float valor) {
+    if (valor < 0.0f) {
+        return 0.0f;
+    }
+
+    if (valor > 1.0f) {
+        return 1.0f;
+    }
+
+    return valor;
+}
+
+static float intervaloIntro(float tempo, float inicio, float duracao) {
+    if (duracao <= 0.0f) {
+        return 1.0f;
+    }
+
+    return limitar01((tempo - inicio) / duracao);
+}
+
+static float suavizarIntro(float t) {
+    t = limitar01(t);
+    return t * t * (3.0f - 2.0f * t);
+}
+
+static void desenharTextoIntroCentralizado(const char *texto, float y, float tamanho, Color cor, float escala) {
+    Vector2 medida = MeasureTextEx(fonteAtiva(), texto, tamanho * escala, 1.0f);
+    DrawTextEx(
+        fonteAtiva(),
+        texto,
+        (Vector2){(GetScreenWidth() - medida.x) / 2.0f, y},
+        tamanho * escala,
+        1.0f,
+        cor
+    );
+}
+
+static void encerrarIntro(IntroGUI *intro, TelaGUI *telaAtual) {
+    if (intro == NULL || telaAtual == NULL || intro->finalizada) {
+        return;
+    }
+
+    intro->finalizada = 1;
+
+    if (intro->transitionSfxCarregado) {
+        PlaySound(intro->transitionSfx);
+    }
+
+    if (intro->musicaCarregada) {
+        StopMusicStream(intro->musica);
+    }
+
+    *telaAtual = TELA_MENU;
+}
+
+static void reiniciarParticulaIntro(ParticulaIntroGUI *particula, int largura, int altura, int nascerNoCentro) {
+    float angulo = ((float)(rand() % 6283) / 1000.0f);
+    float distancia = nascerNoCentro ? (float)(rand() % 70) : (float)(rand() % 720);
+    float profundidade = 0.25f + (float)(rand() % 100) / 100.0f;
+    Vector2 centro = {(float)largura / 2.0f, (float)altura / 2.0f};
+    int tipoCor = rand() % 8;
+
+    particula->direcao = (Vector2){cosf(angulo), sinf(angulo)};
+    particula->posicao = (Vector2){
+        centro.x + particula->direcao.x * distancia,
+        centro.y + particula->direcao.y * distancia
+    };
+    particula->profundidade = profundidade;
+    particula->velocidade = 18.0f + profundidade * 185.0f + (float)(rand() % 30);
+    particula->raio = 0.7f + profundidade * 1.65f;
+
+    if (tipoCor <= 4) {
+        particula->cor = COR_TEXTO;
+    }
+    else if (tipoCor <= 6) {
+        particula->cor = COR_ALERTA;
+    }
+    else {
+        particula->cor = COR_DESTAQUE;
+    }
+}
+
+static void InitIntro(IntroGUI *intro) {
+    if (intro == NULL) {
+        return;
+    }
+
+    memset(intro, 0, sizeof(*intro));
+
+    for (int i = 0; i < INTRO_PARTICULAS; i++) {
+        reiniciarParticulaIntro(&intro->particulas[i], 1200, 800, 0);
+    }
+
+    InitAudioDevice();
+    intro->audioPronto = IsAudioDeviceReady();
+
+    if (!intro->audioPronto) {
+        return;
+    }
+
+    if (FileExists("assets/intro_theme.ogg")) {
+        intro->musica = LoadMusicStream("assets/intro_theme.ogg");
+
+        if (IsMusicValid(intro->musica)) {
+            intro->musicaCarregada = 1;
+            SetMusicVolume(intro->musica, 0.72f);
+            PlayMusicStream(intro->musica);
+        }
+    }
+
+    if (FileExists("assets/logo_sfx.wav")) {
+        intro->logoSfx = LoadSound("assets/logo_sfx.wav");
+        intro->logoSfxCarregado = IsSoundValid(intro->logoSfx);
+    }
+
+    if (FileExists("assets/transition_sfx.wav")) {
+        intro->transitionSfx = LoadSound("assets/transition_sfx.wav");
+        intro->transitionSfxCarregado = IsSoundValid(intro->transitionSfx);
+    }
+}
+
+static void UpdateIntro(IntroGUI *intro, float dt, TelaGUI *telaAtual) {
+    if (intro == NULL || telaAtual == NULL || intro->finalizada) {
+        return;
+    }
+
+    intro->tempo += dt;
+
+    for (int i = 0; i < INTRO_PARTICULAS; i++) {
+        ParticulaIntroGUI *p = &intro->particulas[i];
+        float aceleracao = 1.0f + suavizarIntro(intervaloIntro(intro->tempo, 0.8f, 2.0f)) * 1.25f;
+
+        p->posicao.x += p->direcao.x * p->velocidade * aceleracao * dt;
+        p->posicao.y += p->direcao.y * p->velocidade * aceleracao * dt;
+
+        if (
+            p->posicao.x < -80.0f ||
+            p->posicao.x > GetScreenWidth() + 80.0f ||
+            p->posicao.y < -80.0f ||
+            p->posicao.y > GetScreenHeight() + 80.0f
+        ) {
+            reiniciarParticulaIntro(p, GetScreenWidth(), GetScreenHeight(), 1);
+        }
+    }
+
+    if (intro->musicaCarregada) {
+        float fadeMusica = 1.0f - intervaloIntro(intro->tempo, INTRO_DURACAO - 1.1f, 1.1f);
+        UpdateMusicStream(intro->musica);
+        SetMusicVolume(intro->musica, 0.72f * limitar01(fadeMusica));
+    }
+
+    if (!intro->tocouLogo && intro->tempo >= 1.35f) {
+        intro->tocouLogo = 1;
+
+        if (intro->logoSfxCarregado) {
+            PlaySound(intro->logoSfx);
+        }
+    }
+
+    if (!intro->tocouTransition && intro->tempo >= INTRO_DURACAO - 0.8f) {
+        intro->tocouTransition = 1;
+
+        if (intro->transitionSfxCarregado) {
+            PlaySound(intro->transitionSfx);
+        }
+    }
+
+    if (
+        IsKeyPressed(KEY_ENTER) ||
+        IsKeyPressed(KEY_SPACE) ||
+        IsMouseButtonPressed(MOUSE_LEFT_BUTTON) ||
+        intro->tempo >= INTRO_DURACAO
+    ) {
+        encerrarIntro(intro, telaAtual);
+    }
+}
+
+static void DrawIntro(IntroGUI *intro) {
+    float tempo = intro != NULL ? intro->tempo : 0.0f;
+    float brilho = suavizarIntro(intervaloIntro(tempo, 0.35f, 1.2f));
+    float logoAlpha = suavizarIntro(intervaloIntro(tempo, 1.15f, 1.0f));
+    float arsenaiAlpha = suavizarIntro(intervaloIntro(tempo, 2.0f, 0.9f));
+    float fraseAlpha = suavizarIntro(intervaloIntro(tempo, 4.75f, 0.8f));
+    float fadeSaida = intervaloIntro(tempo, INTRO_DURACAO - 1.0f, 1.0f);
+    float pulso = 1.0f + sinf(tempo * 2.2f) * 0.026f;
+    Vector2 centroTela = {(float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f};
+
+    if (intro != NULL) {
+        for (int i = 0; i < INTRO_PARTICULAS; i++) {
+            ParticulaIntroGUI p = intro->particulas[i];
+            float alpha = 0.22f + p.profundidade * 0.58f;
+            float comprimento = 3.0f + p.profundidade * 18.0f + suavizarIntro(intervaloIntro(tempo, 1.0f, 2.4f)) * 18.0f;
+            Vector2 rastro = {
+                p.posicao.x - p.direcao.x * comprimento,
+                p.posicao.y - p.direcao.y * comprimento
+            };
+
+            DrawLineEx(rastro, p.posicao, p.raio * 0.72f, Fade(p.cor, alpha * 0.28f));
+            DrawCircleV(p.posicao, p.raio, Fade(p.cor, alpha));
+
+            if (p.raio > 1.8f) {
+                DrawCircleV(p.posicao, p.raio * 2.2f, Fade(p.cor, alpha * 0.08f));
+            }
+        }
+    }
+
+    DrawCircleGradient(
+        GetScreenWidth() / 2,
+        GetScreenHeight() / 2,
+        230.0f + sinf(tempo * 2.0f) * 16.0f,
+        Fade(COR_DESTAQUE, 0.36f * brilho),
+        Fade(COR_FUNDO, 0.0f)
+    );
+
+    DrawCircleGradient(
+        GetScreenWidth() / 2,
+        GetScreenHeight() / 2,
+        145.0f,
+        Fade(COR_AZUL_ALTERNATIVA_HOVER, 0.22f * brilho),
+        Fade(COR_FUNDO, 0.0f)
+    );
+
+    DrawLineEx(
+        (Vector2){centroTela.x - 260.0f, centroTela.y + 28.0f},
+        (Vector2){centroTela.x + 260.0f, centroTela.y + 28.0f},
+        2.0f,
+        Fade(COR_DESTAQUE, logoAlpha * 0.35f)
+    );
+
+    desenharTextoIntroCentralizado("JOGO DO SUSA", 220.0f, 68.0f, Fade(COR_TEXTO, logoAlpha), pulso);
+    desenharTextoIntroCentralizado("ARSENAI", 300.0f, 30.0f, Fade(COR_DESTAQUE, arsenaiAlpha), 1.0f + sinf(tempo * 4.0f) * 0.025f);
+
+    desenharTextoIntroCentralizado("Conhecimento, sorte e estrategia", 500.0f, 25.0f, Fade(COR_TEXTO, fraseAlpha), 1.0f);
+    desenharTextoIntroCentralizado("ENTER, ESPACO ou clique para pular", 742.0f, 16.0f, Fade(COR_TEXTO_FRACO, 0.55f), 1.0f);
+
+    if (tempo < 0.65f) {
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 1.0f - tempo / 0.65f));
+    }
+
+    if (fadeSaida > 0.0f) {
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeSaida));
+    }
+}
+
+static void UnloadIntro(IntroGUI *intro) {
+    if (intro == NULL) {
+        return;
+    }
+
+    if (intro->musicaCarregada) {
+        StopMusicStream(intro->musica);
+        UnloadMusicStream(intro->musica);
+        intro->musicaCarregada = 0;
+    }
+
+    if (intro->logoSfxCarregado) {
+        UnloadSound(intro->logoSfx);
+        intro->logoSfxCarregado = 0;
+    }
+
+    if (intro->transitionSfxCarregado) {
+        UnloadSound(intro->transitionSfx);
+        intro->transitionSfxCarregado = 0;
+    }
+
+    if (intro->audioPronto) {
+        CloseAudioDevice();
+        intro->audioPronto = 0;
     }
 }
 
@@ -610,71 +994,143 @@ static int carregarAnaliseTemaGUI(TemaResumoGUI temas[], int limite) {
     return quantidade;
 }
 
-static void desenharTabelaRankingGeralGUI(int x, int y) {
-    LinhaRankingGUI linhas[MAX_RANKING_GUI];
-    int quantidade = carregarRankingGeralGUI(linhas, MAX_RANKING_GUI);
+static void copiarTextoTabelaGUI(const char *origem, char *destino, int tamanhoDestino, int limiteCaracteres) {
+    int tamanhoOrigem;
 
-    DrawText("Ranking geral", x, y, 26, COR_TEXTO);
-
-    if (quantidade == 0) {
-        DrawText("Nenhuma partida registrada ainda.", x, y + 42, 20, COR_TEXTO_FRACO);
+    if (destino == NULL || tamanhoDestino <= 0) {
         return;
     }
 
-    DrawText("Nome", x, y + 44, 18, COR_ALERTA);
-    DrawText("Acertos", x + 230, y + 44, 18, COR_ALERTA);
-    DrawText("Erros", x + 330, y + 44, 18, COR_ALERTA);
-    DrawText("Pontos", x + 415, y + 44, 18, COR_ALERTA);
-    DrawText("Partidas", x + 510, y + 44, 18, COR_ALERTA);
+    destino[0] = '\0';
 
-    for (int i = 0; i < quantidade; i++) {
-        int linhaY = y + 78 + i * 28;
-        char buffer[40];
+    if (origem == NULL) {
+        return;
+    }
 
-        DrawText(linhas[i].nome, x, linhaY, 18, COR_TEXTO);
-        snprintf(buffer, sizeof(buffer), "%d", linhas[i].acertos);
-        DrawText(buffer, x + 230, linhaY, 18, COR_TEXTO_FRACO);
-        snprintf(buffer, sizeof(buffer), "%d", linhas[i].erros);
-        DrawText(buffer, x + 330, linhaY, 18, COR_TEXTO_FRACO);
-        snprintf(buffer, sizeof(buffer), "%d", linhas[i].pontos);
-        DrawText(buffer, x + 415, linhaY, 18, COR_TEXTO_FRACO);
-        snprintf(buffer, sizeof(buffer), "%d", linhas[i].partidas);
-        DrawText(buffer, x + 510, linhaY, 18, COR_TEXTO_FRACO);
+    tamanhoOrigem = (int)strlen(origem);
+
+    if (tamanhoOrigem <= limiteCaracteres || limiteCaracteres < 4) {
+        strncpy(destino, origem, tamanhoDestino - 1);
+        destino[tamanhoDestino - 1] = '\0';
+        return;
+    }
+
+    if (limiteCaracteres >= tamanhoDestino) {
+        limiteCaracteres = tamanhoDestino - 1;
+    }
+
+    strncpy(destino, origem, limiteCaracteres - 3);
+    destino[limiteCaracteres - 3] = '\0';
+    strncat(destino, "...", tamanhoDestino - strlen(destino) - 1);
+}
+
+static void desenharTabelaRankingGeralGUI(int x, int y) {
+    LinhaRankingGUI linhas[MAX_RANKING_GUI];
+    int quantidade = carregarRankingGeralGUI(linhas, MAX_RANKING_GUI);
+    const int itensPorColuna = 6;
+    const int larguraColuna = 535;
+    const int alturaLinha = 23;
+
+    DrawText("Ranking geral", x, y, 24, COR_TEXTO);
+
+    if (quantidade == 0) {
+        DrawText("Nenhuma partida registrada ainda.", x, y + 42, 18, COR_TEXTO_FRACO);
+        return;
+    }
+
+    for (int coluna = 0; coluna < 2; coluna++) {
+        int inicio = coluna * itensPorColuna;
+        int cx = x + coluna * larguraColuna;
+
+        if (inicio >= quantidade) {
+            continue;
+        }
+
+        DrawText("Nome", cx, y + 42, 15, COR_ALERTA);
+        DrawText("A", cx + 195, y + 42, 15, COR_ALERTA);
+        DrawText("E", cx + 255, y + 42, 15, COR_ALERTA);
+        DrawText("Pontos", cx + 315, y + 42, 15, COR_ALERTA);
+        DrawText("Part.", cx + 405, y + 42, 15, COR_ALERTA);
+
+        for (int local = 0; local < itensPorColuna; local++) {
+            int i = inicio + local;
+            int linhaY = y + 68 + local * alturaLinha;
+            char buffer[40];
+            char nome[32];
+
+            if (i >= quantidade) {
+                break;
+            }
+
+            copiarTextoTabelaGUI(linhas[i].nome, nome, sizeof(nome), 20);
+
+            DrawText(nome, cx, linhaY, 15, COR_TEXTO);
+            snprintf(buffer, sizeof(buffer), "%d", linhas[i].acertos);
+            DrawText(buffer, cx + 195, linhaY, 15, COR_TEXTO_FRACO);
+            snprintf(buffer, sizeof(buffer), "%d", linhas[i].erros);
+            DrawText(buffer, cx + 255, linhaY, 15, COR_TEXTO_FRACO);
+            snprintf(buffer, sizeof(buffer), "%d", linhas[i].pontos);
+            DrawText(buffer, cx + 315, linhaY, 15, COR_TEXTO_FRACO);
+            snprintf(buffer, sizeof(buffer), "%d", linhas[i].partidas);
+            DrawText(buffer, cx + 405, linhaY, 15, COR_TEXTO_FRACO);
+        }
     }
 }
 
 static void desenharAnaliseTemaGUI(int x, int y) {
     TemaResumoGUI temas[MAX_TEMAS_GUI];
     int quantidade = carregarAnaliseTemaGUI(temas, MAX_TEMAS_GUI);
+    const int itensPorColuna = 6;
+    const int larguraColuna = 535;
+    const int alturaLinha = 23;
 
-    DrawText("Analise por tema", x, y, 26, COR_TEXTO);
+    DrawText("Analise por tema", x, y, 24, COR_TEXTO);
 
     if (quantidade == 0) {
-        DrawText("Nenhuma resposta registrada ainda.", x, y + 42, 20, COR_TEXTO_FRACO);
+        DrawText("Nenhuma resposta registrada ainda.", x, y + 42, 18, COR_TEXTO_FRACO);
         return;
     }
 
-    DrawText("Tema", x, y + 44, 18, COR_ALERTA);
-    DrawText("Acertos", x + 310, y + 44, 18, COR_ALERTA);
-    DrawText("Erros", x + 410, y + 44, 18, COR_ALERTA);
-    DrawText("Total", x + 500, y + 44, 18, COR_ALERTA);
-    DrawText("Aproveit.", x + 580, y + 44, 18, COR_ALERTA);
+    for (int coluna = 0; coluna < 2; coluna++) {
+        int inicio = coluna * itensPorColuna;
+        int cx = x + coluna * larguraColuna;
 
-    for (int i = 0; i < quantidade; i++) {
-        int linhaY = y + 78 + i * 28;
-        int total = temas[i].acertos + temas[i].erros;
-        double aproveitamento = total > 0 ? (temas[i].acertos * 100.0) / total : 0.0;
-        char buffer[50];
+        if (inicio >= quantidade) {
+            continue;
+        }
 
-        DrawText(temas[i].tema, x, linhaY, 18, COR_TEXTO);
-        snprintf(buffer, sizeof(buffer), "%d", temas[i].acertos);
-        DrawText(buffer, x + 310, linhaY, 18, COR_TEXTO_FRACO);
-        snprintf(buffer, sizeof(buffer), "%d", temas[i].erros);
-        DrawText(buffer, x + 410, linhaY, 18, COR_TEXTO_FRACO);
-        snprintf(buffer, sizeof(buffer), "%d", total);
-        DrawText(buffer, x + 500, linhaY, 18, COR_TEXTO_FRACO);
-        snprintf(buffer, sizeof(buffer), "%.1f%%", aproveitamento);
-        DrawText(buffer, x + 580, linhaY, 18, COR_TEXTO_FRACO);
+        DrawText("Tema", cx, y + 42, 15, COR_ALERTA);
+        DrawText("A", cx + 250, y + 42, 15, COR_ALERTA);
+        DrawText("E", cx + 305, y + 42, 15, COR_ALERTA);
+        DrawText("Total", cx + 360, y + 42, 15, COR_ALERTA);
+        DrawText("%", cx + 435, y + 42, 15, COR_ALERTA);
+
+        for (int local = 0; local < itensPorColuna; local++) {
+            int i = inicio + local;
+            int linhaY = y + 68 + local * alturaLinha;
+            int total;
+            double aproveitamento;
+            char buffer[50];
+            char tema[36];
+
+            if (i >= quantidade) {
+                break;
+            }
+
+            total = temas[i].acertos + temas[i].erros;
+            aproveitamento = total > 0 ? (temas[i].acertos * 100.0) / total : 0.0;
+            copiarTextoTabelaGUI(temas[i].tema, tema, sizeof(tema), 26);
+
+            DrawText(tema, cx, linhaY, 15, COR_TEXTO);
+            snprintf(buffer, sizeof(buffer), "%d", temas[i].acertos);
+            DrawText(buffer, cx + 250, linhaY, 15, COR_TEXTO_FRACO);
+            snprintf(buffer, sizeof(buffer), "%d", temas[i].erros);
+            DrawText(buffer, cx + 305, linhaY, 15, COR_TEXTO_FRACO);
+            snprintf(buffer, sizeof(buffer), "%d", total);
+            DrawText(buffer, cx + 360, linhaY, 15, COR_TEXTO_FRACO);
+            snprintf(buffer, sizeof(buffer), "%.1f", aproveitamento);
+            DrawText(buffer, cx + 435, linhaY, 15, COR_TEXTO_FRACO);
+        }
     }
 }
 
@@ -685,61 +1141,64 @@ static void desenharTabuleiroGUI(
     int jogadorAtual,
     AnimacaoGUI *animacao
 ) {
-    int ordem[6][6] = {
-        {0, 1, 2, 3, 4, 5},
-        {11, 10, 9, 8, 7, 6},
-        {12, 13, 14, 15, 16, 17},
-        {23, 22, 21, 20, 19, 18},
-        {24, 25, 26, 27, 28, 29},
-        {30, -1, -1, -1, -1, -1}
-    };
-
     int jogadorPulando = (animacao != NULL && animacao->movimentoAtivo) ? animacao->jogador : -1;
 
-    for (int linha = 0; linha < 6; linha++) {
-        for (int coluna = 0; coluna < 6; coluna++) {
-            int idCasa = ordem[linha][coluna];
+    DrawRectangleRounded((Rectangle){24, 186, 666, 606}, 0.04f, 12, COR_PAINEL);
 
-            if (idCasa < 0) {
-                continue;
+    // A trilha conecta as casas em ordem, deixando o tabuleiro com cara de percurso.
+    for (int id = 0; id < CASA_FINAL; id++) {
+        Vector2 a = centroCasaTabuleiro(id);
+        Vector2 b = centroCasaTabuleiro(id + 1);
+
+        DrawLineEx(a, b, 14.0f, Fade(COR_TRILHA, 0.82f));
+        DrawLineEx(a, b, 5.0f, Fade(COR_DESTAQUE, 0.44f));
+    }
+
+    for (int id = 0; id <= CASA_FINAL; id++) {
+        Casa *casa = buscarCasaGUI(inicio, id);
+        Vector2 centro = centroCasaTabuleiro(id);
+        Color corBase;
+        int ocupantes = 0;
+        int casaAtualDoJogador = 0;
+        char idTexto[8];
+
+        if (casa == NULL) {
+            continue;
+        }
+
+        corBase = corCasa(casa->tipo);
+
+        for (int j = 0; j < qtdJogadores; j++) {
+            if (jogadores[j].casaAtual != NULL && jogadores[j].casaAtual->id == casa->id) {
+                if (j == jogadorAtual) {
+                    casaAtualDoJogador = 1;
+                }
+                ocupantes++;
             }
+        }
 
-            Casa *casa = inicio;
-            while (casa != NULL && casa->id != idCasa) {
-                casa = casa->prox;
-            }
+        DrawCircleV((Vector2){centro.x + 4, centro.y + 6}, casaAtualDoJogador ? 38 : 34, Fade(BLACK, 0.34f));
+        DrawCircleV(centro, casaAtualDoJogador ? 38 : 34, casaAtualDoJogador ? COR_TEXTO : Fade(COR_TEXTO, 0.16f));
+        DrawCircleV(centro, casaAtualDoJogador ? 33 : 30, corBase);
+        DrawCircleLines((int)centro.x, (int)centro.y, casaAtualDoJogador ? 33 : 30, Fade(BLACK, 0.55f));
 
-            if (casa == NULL) {
-                continue;
-            }
+        snprintf(idTexto, sizeof(idTexto), "%02d", casa->id);
+        desenharTextoCentroCasa(idTexto, centro, (int)centro.y - 24, 24, WHITE);
+        desenharTextoCentroCasa(nomeTipoCasa(casa->tipo), centro, (int)centro.y + 4, 13, WHITE);
 
-            Rectangle r = {
-                (float)(TAB_X + coluna * (TAB_TAM + TAB_GAP)),
-                (float)(TAB_Y + linha * (TAB_TAM + TAB_GAP)),
-                (float)TAB_TAM,
-                (float)TAB_TAM
-            };
+        if (ocupantes > 0) {
+            int desenhados = 0;
 
-            DrawRectangleRounded(r, 0.14f, 8, corCasa(casa->tipo));
-            DrawRectangleRoundedLines(r, 0.14f, 8, Fade(WHITE, 0.35f));
-
-            char idTexto[8];
-            snprintf(idTexto, sizeof(idTexto), "%02d", casa->id);
-            DrawText(idTexto, (int)r.x + 8, (int)r.y + 8, 22, COR_TEXTO);
-            DrawText(nomeTipoCasa(casa->tipo), (int)r.x + 8, (int)r.y + 36, 12, Fade(COR_TEXTO, 0.84f));
-
-            int ocupantes = 0;
             for (int j = 0; j < qtdJogadores; j++) {
                 if (j == jogadorPulando) {
                     continue;
                 }
 
                 if (jogadores[j].casaAtual != NULL && jogadores[j].casaAtual->id == casa->id) {
-                    int px = (int)r.x + 17 + ocupantes * 18;
-                    int py = (int)r.y + 62;
-                    desenharPeao((Vector2){(float)px, (float)py}, jogadores[j].cor, j == jogadorAtual);
-
-                    ocupantes++;
+                    float px = centro.x - 18.0f + desenhados * 15.0f;
+                    float py = centro.y + 29.0f;
+                    desenharPeao((Vector2){px, py}, jogadores[j].cor, j == jogadorAtual);
+                    desenhados++;
                 }
             }
         }
@@ -768,39 +1227,41 @@ static void desenharTabuleiroGUI(
 }
 
 static void desenharPainelJogadores(JogadorGUI jogadores[], int qtdJogadores, int jogadorAtual, const char *grupo) {
-    Rectangle painel = {650, 220, 500, 390};
+    Rectangle painel = {720, 230, 420, 265};
     DrawRectangleRounded(painel, 0.04f, 8, COR_PAINEL);
-    DrawText("Jogadores", 675, 245, 28, COR_TEXTO);
+    DrawText("Jogadores", 744, 250, 24, COR_TEXTO);
 
     char grupoTexto[80];
     snprintf(grupoTexto, sizeof(grupoTexto), "Grupo do historico: %s", grupo);
-    DrawText(grupoTexto, 675, 280, 18, COR_TEXTO_FRACO);
+    DrawText(grupoTexto, 744, 282, 15, COR_TEXTO_FRACO);
 
     for (int i = 0; i < qtdJogadores; i++) {
-        int y = 325 + i * 62;
+        int y = 315 + i * 42;
         Color linha = (i == jogadorAtual) ? COR_PAINEL_CLARO : Fade(COR_PAINEL_CLARO, 0.42f);
-        DrawRectangleRounded((Rectangle){675, (float)y, 440, 48}, 0.08f, 8, linha);
-        DrawCircle(696, y + 24, 10, jogadores[i].cor);
-        DrawText(jogadores[i].nome, 715, y + 8, 20, COR_TEXTO);
+        DrawRectangleRounded((Rectangle){744, (float)y, 360, 34}, 0.08f, 8, linha);
+        DrawCircle(762, y + 17, 8, jogadores[i].cor);
+        DrawText(jogadores[i].nome, 778, y + 4, 17, COR_TEXTO);
 
         char dados[160];
         snprintf(
             dados,
             sizeof(dados),
-            "Casa %02d | Acertos %d | Erros %d | Pontos %d",
+            "Casa %02d | A:%d E:%d P:%d",
             jogadores[i].posicaoAtual,
             jogadores[i].acertos,
             jogadores[i].erros,
             jogadores[i].pontuacao
         );
-        DrawText(dados, 715, y + 30, 14, COR_TEXTO_FRACO);
+        DrawText(dados, 778, y + 21, 12, COR_TEXTO_FRACO);
     }
 }
 
-static void desenharRankingGUI(JogadorGUI jogadores[], int qtdJogadores) {
-    DrawText("Ranking da partida", 650, 625, 26, COR_TEXTO);
-
+static void desenharRankingFinalGUI(JogadorGUI jogadores[], int qtdJogadores, int x, int y) {
     tp_item ranking[MAX_GUI_JOGADORES];
+
+    DrawText("Ranking da partida", x, y, 24, COR_TEXTO);
+    DrawText("Pos  Nome              A  E  Pontos", x, y + 36, 15, COR_ALERTA);
+
     for (int i = 0; i < qtdJogadores; i++) {
         ranking[i] = converterJogadorGUI(jogadores[i], i + 1);
     }
@@ -808,19 +1269,71 @@ static void desenharRankingGUI(JogadorGUI jogadores[], int qtdJogadores) {
     ordenarJogadoresPartida(ranking, qtdJogadores);
 
     for (int i = 0; i < qtdJogadores; i++) {
-        char linha[180];
+        char linha[140];
         snprintf(
             linha,
             sizeof(linha),
-            "%d. %s  A:%d  E:%d  P:%d",
+            "%d    %-16s %d  %d  %d",
             i + 1,
             ranking[i].nome,
             ranking[i].acertos,
             ranking[i].erros,
             ranking[i].pontuacao
         );
-        DrawText(linha, 655, 665 + i * 24, 18, COR_TEXTO_FRACO);
+        DrawText(linha, x, y + 66 + i * 30, 18, COR_TEXTO_FRACO);
     }
+}
+
+static void desenharQuedasCasaGUI(Casa *inicio, NoCasa *arvoreQuedas, int x, int y) {
+    DrawText("Casas visitadas", x, y, 24, COR_TEXTO);
+    DrawText("Casa  Tipo       Qtd", x, y + 34, 15, COR_ALERTA);
+
+    for (int id = 0; id <= CASA_FINAL; id++) {
+        int coluna = id / 11;
+        int linha = id % 11;
+        int px = x + coluna * 205;
+        int py = y + 62 + linha * 22;
+        Casa *casa = buscarCasaGUI(inicio, id);
+        int quedas = quantidadeQuedasCasa(arvoreQuedas, id);
+        char texto[80];
+        Color corTipo = COR_TEXTO_FRACO;
+
+        if (casa == NULL) {
+            continue;
+        }
+
+        if (casa->tipo == PRISAO) {
+            corTipo = COR_EDAG;
+        }
+        else if (casa->tipo == PERGUNTA) {
+            corTipo = COR_PERGUNTA;
+        }
+
+        snprintf(texto, sizeof(texto), "%02d    %-8s   %d", id, nomeTipoCasa(casa->tipo), quedas);
+        DrawText(texto, px, py, 14, corTipo);
+    }
+}
+
+static void desenharBaralhoDificuldade(Rectangle area, const char *titulo, NivelPergunta nivel, Color corBase) {
+    char qtdTexto[40];
+    int quantidade = quantidadePerguntasNivelGUI(nivel);
+    int semCartas = quantidade <= 0;
+
+    snprintf(qtdTexto, sizeof(qtdTexto), "%d cartas", quantidade);
+
+    if (semCartas) {
+        corBase = COR_PAINEL_CLARO;
+        snprintf(qtdTexto, sizeof(qtdTexto), "Sem cartas");
+    }
+
+    DrawRectangleRounded((Rectangle){area.x + 14, area.y - 14, area.width, area.height}, 0.08f, 8, Fade(corBase, 0.34f));
+    DrawRectangleRounded((Rectangle){area.x + 7, area.y - 7, area.width, area.height}, 0.08f, 8, Fade(corBase, 0.58f));
+    DrawRectangleRounded(area, 0.08f, 8, corBase);
+    DrawRectangleRoundedLines(area, 0.08f, 8, Fade(WHITE, 0.38f));
+
+    DrawText(titulo, (int)area.x + 24, (int)area.y + 32, 30, semCartas ? COR_TEXTO_FRACO : COR_FUNDO);
+    DrawText(qtdTexto, (int)area.x + 24, (int)area.y + 78, 20, semCartas ? COR_TEXTO_FRACO : Fade(COR_FUNDO, 0.78f));
+    DrawText(semCartas ? "Indisponivel" : "Selecionar", (int)area.x + 24, (int)area.y + 132, 18, semCartas ? COR_TEXTO_FRACO : COR_FUNDO);
 }
 
 static void finalizarPartidaGUI(
@@ -892,13 +1405,16 @@ int main(void) {
 
     srand((unsigned int)time(NULL));
 
+    IntroGUI intro;
+    InitIntro(&intro);
+
     Casa *inicioTabuleiro = NULL;
     Casa *fimTabuleiro = NULL;
     criarTabuleiroPadrao(&inicioTabuleiro, &fimTabuleiro);
     salvarPerguntasCSV();
     inicializarHistoricoRespostasCSV();
 
-    TelaGUI telaAtual = TELA_MENU;
+    TelaGUI telaAtual = TELA_INTRO;
     JogadorGUI jogadores[MAX_GUI_JOGADORES];
     int qtdJogadores = 2;
     int jogadorCadastro = 0;
@@ -942,7 +1458,10 @@ int main(void) {
         float dt = GetFrameTime();
         TipoMovimentoGUI movimentoFinalizado = MOVIMENTO_NENHUM;
 
-        if (atrasoAcao > 0.0f) {
+        if (telaAtual == TELA_INTRO) {
+            UpdateIntro(&intro, dt, &telaAtual);
+        }
+        else if (atrasoAcao > 0.0f) {
             atrasoAcao -= dt;
 
             if (atrasoAcao <= 0.0f) {
@@ -960,7 +1479,7 @@ int main(void) {
             }
         }
 
-        if (atrasoAcao <= 0.0f) {
+        if (telaAtual != TELA_INTRO && atrasoAcao <= 0.0f) {
             movimentoFinalizado = atualizarAnimacoesGUI(
                 &animacao,
                 jogadores,
@@ -970,7 +1489,7 @@ int main(void) {
             );
         }
 
-        if (movimentoFinalizado != MOVIMENTO_NENHUM) {
+        if (telaAtual != TELA_INTRO && movimentoFinalizado != MOVIMENTO_NENHUM) {
             JogadorGUI *j = &jogadores[jogadorAtual];
             char acao[160];
 
@@ -988,7 +1507,7 @@ int main(void) {
 
                 if (j->casaAtual->tipo == PRISAO) {
                     j->preso = 1;
-                    snprintf(mensagem, sizeof(mensagem), "%s caiu na prisao e perde a proxima rodada.", j->nome);
+                    snprintf(mensagem, sizeof(mensagem), "%s caiu no EDAG e perde a proxima rodada.", j->nome);
                     adicionarAcaoHistorico(&historicoAcoes, mensagem);
                     atrasoAcao = 1.15f;
                     trocarJogadorDepoisAtraso = 1;
@@ -1020,7 +1539,10 @@ int main(void) {
         BeginDrawing();
         ClearBackground(COR_FUNDO);
 
-        if (telaAtual == TELA_MENU) {
+        if (telaAtual == TELA_INTRO) {
+            DrawIntro(&intro);
+        }
+        else if (telaAtual == TELA_MENU) {
             desenharTelaMenu(&telaAtual);
         }
         else if (telaAtual == TELA_GRUPO) {
@@ -1130,6 +1652,7 @@ int main(void) {
                         liberarArvoreCasas(arvoreQuedas);
                     }
                     arvoreQuedas = NULL;
+                    reiniciarPerguntasJogo();
                     memset(&animacao, 0, sizeof(animacao));
                     atrasoAcao = 0.0f;
                     trocarJogadorDepoisAtraso = 0;
@@ -1179,7 +1702,7 @@ int main(void) {
 
                 if (j->preso) {
                     j->preso = 0;
-                    snprintf(mensagem, sizeof(mensagem), "%s perdeu a rodada porque estava preso.", j->nome);
+                    snprintf(mensagem, sizeof(mensagem), "%s perdeu a rodada por causa do EDAG.", j->nome);
                     adicionarAcaoHistorico(&historicoAcoes, mensagem);
                     atrasoAcao = 0.85f;
                     trocarJogadorDepoisAtraso = 1;
@@ -1195,51 +1718,75 @@ int main(void) {
             }
         }
         else if (telaAtual == TELA_ESCOLHER_DIFICULDADE) {
-            desenharTitulo("Escolha a dificuldade", jogadores[jogadorAtual].nome);
+            Rectangle facil = {205, 320, 230, 190};
+            Rectangle medio = {485, 320, 230, 190};
+            Rectangle dificil = {765, 320, 230, 190};
+            Vector2 mouse = GetMousePosition();
 
-            BotaoGUI facil = {{40, 240, 260, 58}, "Facil"};
-            BotaoGUI medio = {{40, 315, 260, 58}, "Medio"};
-            BotaoGUI dificil = {{40, 390, 260, 58}, "Dificil"};
+            desenharTextoCentralizado("Escolha um baralho", 125, 42, COR_TEXTO);
+            desenharTextoCentralizado(jogadores[jogadorAtual].nome, 178, 24, COR_TEXTO_FRACO);
+            desenharTextoCentralizado(mensagem, 570, 18, COR_TEXTO_FRACO);
 
-            desenharBotao(facil, COR_DESTAQUE);
-            desenharBotao(medio, COR_ALERTA);
-            desenharBotao(dificil, COR_ERRO);
+            desenharBaralhoDificuldade(facil, "Facil", FACIL, (Color){255, 177, 67, 255});
+            desenharBaralhoDificuldade(medio, "Medio", MEDIO, (Color){255, 130, 0, 255});
+            desenharBaralhoDificuldade(dificil, "Dificil", DIFICIL, (Color){230, 60, 34, 255});
 
-            if (botaoClicado(facil) || botaoClicado(medio) || botaoClicado(dificil)) {
-                if (botaoClicado(facil)) {
+            if (CheckCollisionPointRec(mouse, facil) || CheckCollisionPointRec(mouse, medio) || CheckCollisionPointRec(mouse, dificil)) {
+                DrawCircleV(mouse, 5, COR_TEXTO);
+            }
+
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && (
+                CheckCollisionPointRec(mouse, facil) ||
+                CheckCollisionPointRec(mouse, medio) ||
+                CheckCollisionPointRec(mouse, dificil)
+            )) {
+                if (CheckCollisionPointRec(mouse, facil)) {
                     nivelEscolhido = FACIL;
                 }
-                else if (botaoClicado(medio)) {
+                else if (CheckCollisionPointRec(mouse, medio)) {
                     nivelEscolhido = MEDIO;
                 }
                 else {
                     nivelEscolhido = DIFICIL;
                 }
 
-                int indicePergunta = sortearIndicePerguntaNivel(nivelEscolhido);
+                int indicePergunta = consumirIndicePerguntaNivel(nivelEscolhido);
                 const Questao *questao = obterQuestaoPorIndice(indicePergunta);
 
                 if (questao != NULL) {
                     questaoAtual = *questao;
                     temQuestaoAtual = 1;
                     telaAtual = TELA_PERGUNTA;
+                } else {
+                    snprintf(mensagem, sizeof(mensagem), "Nao ha cartas %s disponiveis.", nomeNivelGUI(nivelEscolhido));
+                    adicionarAcaoHistorico(&historicoAcoes, mensagem);
                 }
             }
         }
         else if (telaAtual == TELA_PERGUNTA) {
-            desenharTitulo("Pergunta", nomeNivelGUI(nivelEscolhido));
-
             if (temQuestaoAtual) {
-                DrawText(questaoAtual.enunciado, 40, 230, 22, COR_TEXTO);
+                Rectangle painelPergunta = {150, 95, 900, 610};
+                Rectangle areaEnunciado = {195, 175, 810, 130};
+
+                DrawRectangleRounded(painelPergunta, 0.04f, 12, COR_AZUL_PERGUNTA);
+                DrawRectangleRoundedLines(painelPergunta, 0.04f, 12, Fade(COR_TEXTO, 0.28f));
+                desenharTextoCentralizado("Pergunta", 123, 34, COR_TEXTO);
+                desenharTextoCentralizado(nomeNivelGUI(nivelEscolhido), 160, 18, COR_ALERTA);
+                desenharTextoQuebrado(questaoAtual.enunciado, areaEnunciado, 23, COR_TEXTO);
 
                 for (int i = 0; i < 4; i++) {
-                    Rectangle area = {60, (float)(300 + i * 78), 850, 58};
+                    Rectangle area = {195, (float)(330 + i * 82), 810, 62};
                     char textoAlternativa[560];
-                    snprintf(textoAlternativa, sizeof(textoAlternativa), "%c) %s", 'A' + i, questaoAtual.alternativas[i]);
-                    BotaoGUI botao = {area, textoAlternativa};
-                    desenharBotao(botao, COR_PAINEL_CLARO);
+                    Vector2 mouse = GetMousePosition();
+                    int hover = CheckCollisionPointRec(mouse, area);
 
-                    if (botaoClicado(botao)) {
+                    snprintf(textoAlternativa, sizeof(textoAlternativa), "%c) %s", 'A' + i, questaoAtual.alternativas[i]);
+
+                    DrawRectangleRounded(area, 0.08f, 10, hover ? COR_AZUL_ALTERNATIVA_HOVER : COR_AZUL_ALTERNATIVA);
+                    DrawRectangleRoundedLines(area, 0.08f, 10, hover ? COR_DESTAQUE : Fade(WHITE, 0.14f));
+                    desenharTextoQuebrado(textoAlternativa, (Rectangle){area.x + 18, area.y + 13, area.width - 36, area.height - 14}, 18, COR_TEXTO);
+
+                    if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                         JogadorGUI *j = &jogadores[jogadorAtual];
                         ResultadoPergunta resultado;
                         char acao[160];
@@ -1289,34 +1836,43 @@ int main(void) {
         else if (telaAtual == TELA_RANKING) {
             desenharTitulo("Ranking geral", "Dados carregados dos CSVs do jogo.");
 
-            desenharTabelaRankingGeralGUI(40, 230);
-            desenharAnaliseTemaGUI(40, 500);
+            DrawRectangleRounded((Rectangle){40, 155, 1120, 250}, 0.04f, 10, COR_PAINEL);
+            DrawRectangleRoundedLines((Rectangle){40, 155, 1120, 250}, 0.04f, 10, Fade(COR_DESTAQUE, 0.28f));
+            desenharTabelaRankingGeralGUI(70, 178);
 
-            BotaoGUI voltar = {{930, 690, 220, 54}, "Voltar"};
+            DrawRectangleRounded((Rectangle){40, 430, 1120, 250}, 0.04f, 10, COR_PAINEL);
+            DrawRectangleRoundedLines((Rectangle){40, 430, 1120, 250}, 0.04f, 10, Fade(COR_DESTAQUE, 0.28f));
+            desenharAnaliseTemaGUI(70, 453);
+
+            BotaoGUI voltar = {{930, 710, 220, 50}, "Voltar"};
             desenharBotao(voltar, COR_DESTAQUE);
             if (botaoClicado(voltar)) {
                 telaAtual = TELA_MENU;
             }
         }
         else if (telaAtual == TELA_FIM) {
-            desenharTitulo("Fim de jogo", jogoFinalizado ? "Partida salva nos arquivos CSV." : "");
+            desenharTextoCentralizado("Fim de jogo", 42, 42, COR_TEXTO);
+            desenharTextoCentralizado(jogoFinalizado ? "Partida salva nos arquivos CSV." : "", 92, 20, COR_TEXTO_FRACO);
 
             if (indiceVencedor >= 0) {
                 char vencedor[120];
                 snprintf(vencedor, sizeof(vencedor), "Vencedor: %s", jogadores[indiceVencedor].nome);
-                DrawText(vencedor, 40, 220, 34, COR_DESTAQUE);
+                desenharTextoCentralizado(vencedor, 132, 28, COR_DESTAQUE);
             }
 
-            desenharRankingGUI(jogadores, qtdJogadores);
+            DrawRectangleRounded((Rectangle){48, 195, 420, 260}, 0.05f, 10, COR_PAINEL);
+            DrawRectangleRoundedLines((Rectangle){48, 195, 420, 260}, 0.05f, 10, Fade(COR_DESTAQUE, 0.32f));
+            desenharRankingFinalGUI(jogadores, qtdJogadores, 76, 222);
 
-            DrawText("Arquivos atualizados:", 40, 310, 24, COR_TEXTO);
-            DrawText("historico_respostas.csv", 60, 350, 22, COR_TEXTO_FRACO);
-            DrawText("ranking_partidas.csv", 60, 380, 22, COR_TEXTO_FRACO);
-            DrawText("ranking_geral.csv", 60, 410, 22, COR_TEXTO_FRACO);
-            DrawText("quedas_casas.csv", 60, 440, 22, COR_TEXTO_FRACO);
-            DrawText("perguntas.csv", 60, 470, 22, COR_TEXTO_FRACO);
+            DrawRectangleRounded((Rectangle){492, 195, 660, 380}, 0.05f, 10, COR_PAINEL);
+            DrawRectangleRoundedLines((Rectangle){492, 195, 660, 380}, 0.05f, 10, Fade(COR_DESTAQUE, 0.32f));
+            desenharQuedasCasaGUI(inicioTabuleiro, arvoreQuedas, 520, 222);
 
-            BotaoGUI voltar = {{40, 545, 240, 54}, "Menu inicial"};
+            DrawText("Arquivos atualizados:", 76, 492, 20, COR_TEXTO);
+            DrawText("historico_respostas.csv  |  ranking_partidas.csv  |  ranking_geral.csv", 76, 525, 16, COR_TEXTO_FRACO);
+            DrawText("quedas_casas.csv  |  perguntas.csv", 76, 551, 16, COR_TEXTO_FRACO);
+
+            BotaoGUI voltar = {{480, 665, 240, 58}, "Menu inicial"};
             desenharBotao(voltar, COR_DESTAQUE);
 
             if (botaoClicado(voltar)) {
@@ -1332,6 +1888,7 @@ int main(void) {
     }
 
     liberarTabuleiro(inicioTabuleiro);
+    UnloadIntro(&intro);
     if (fonteUICarregada) {
         UnloadFont(fonteUI);
     }

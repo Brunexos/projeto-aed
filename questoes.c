@@ -327,6 +327,35 @@ int sortearIndicePerguntaNivel(NivelPergunta nivel) {
     return QTD_FACEIS + QTD_MEDIAS + (rand() % QTD_DIFICEIS);
 }
 
+int quantidadePerguntasRestantesNivel(NivelPergunta nivel) {
+    if (!pilhasInicializadas) {
+        inicializarPilhasPerguntas();
+    }
+
+    return altura_pilha(selecionarPilhaPorNivel(nivel));
+}
+
+int consumirIndicePerguntaNivel(NivelPergunta nivel) {
+    int indicePergunta = -1;
+    tp_pilha *pilhaEscolhida;
+
+    if (!pilhasInicializadas) {
+        inicializarPilhasPerguntas();
+    }
+
+    pilhaEscolhida = selecionarPilhaPorNivel(nivel);
+
+    if (pilha_vazia(pilhaEscolhida)) {
+        return -1;
+    }
+
+    if (!pop(pilhaEscolhida, &indicePergunta)) {
+        return -1;
+    }
+
+    return indicePergunta;
+}
+
 static void copiarCampoQuestoesCSV(char *destino, const char *origem, int tamanhoDestino) {
     int i = 0;
 
