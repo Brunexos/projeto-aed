@@ -301,6 +301,32 @@ static const char* corNivelPergunta(NivelPergunta nivel) {
     }
 }
 
+int totalPerguntasJogo() {
+    return TOTAL_PERGUNTAS;
+}
+
+const Questao* obterQuestaoPorIndice(int indice) {
+    if (indice < 0 || indice >= TOTAL_PERGUNTAS) {
+        return NULL;
+    }
+
+    return &bancoPerguntas[indice];
+}
+
+int sortearIndicePerguntaNivel(NivelPergunta nivel) {
+    inicializarRandomUmaVez();
+
+    if (nivel == FACIL) {
+        return rand() % QTD_FACEIS;
+    }
+
+    if (nivel == MEDIO) {
+        return QTD_FACEIS + (rand() % QTD_MEDIAS);
+    }
+
+    return QTD_FACEIS + QTD_MEDIAS + (rand() % QTD_DIFICEIS);
+}
+
 static void copiarCampoQuestoesCSV(char *destino, const char *origem, int tamanhoDestino) {
     int i = 0;
 
