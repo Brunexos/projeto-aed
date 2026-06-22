@@ -45,3 +45,14 @@ AED;2026.1;Cesar;P010;1;Pilha;Overflow;Dificil;B;B;Acertou
 AED;2026.1;Bruno;P006;1;Ponteiros;Ponteiro para ponteiro;Medio;B;B;Acertou
 AED;2026.1;Cesar;P010;1;Pilha;Overflow;Dificil;B;B;Acertou
 AED;2026.1;Cesar;P009;1;Ponteiros;Ponteiro para funcao;Dificil;D;B;Errou
+AED;2026.1;Bruno;P010;1;Pilha;Overflow;Dificil;B;B;Acertou
+AED;2026.1;Bruno;P009;1;Ponteiros;Ponteiro para funcao;Dificil;A;B;Errou
+AED;2026.1;Cesar;P011;2;Lista Encadeada;Ciclo;Dificil;A;A;Acertou
+AED;2026.1;Bruno;P012;2;Lista Duplamente Encadeada;Memoria;Dificil;C;C;Acertou
+AED;2026.1;Bruno;P005;1;Pilha;Topo;Medio;B;B;Acertou
+AED;2026.1;Cesar;P008;2;Lista Duplamente Encadeada;Remocao;Medio;B;B;Acertou
+AED;2026.1;Teste2;P009;1;Ponteiros;Ponteiro para funcao;Dificil;B;B;Acertou
+AED;2026.1;Teste2;P011;2;Lista Encadeada;Ciclo;Dificil;A;A;Acertou
+AED;2026.1;Teste1;P012;2;Lista Duplamente Encadeada;Memoria;Dificil;C;C;Acertou
+AED;2026.1;Teste2;P010;1;Pilha;Overflow;Dificil;B;B;Acertou
+AED;2026.1;Teste1;P006;1;Ponteiros;Ponteiro para ponteiro;Medio;B;B;Acertou

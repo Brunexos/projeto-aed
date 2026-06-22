@@ -19,10 +19,12 @@
 #define CASA_FINAL 30
 #define MAX_RANKING_GUI 12
 #define MAX_TEMAS_GUI 12
-#define TAB_X 42
-#define TAB_Y 202
-#define TAB_TAM 82
-#define TAB_GAP 18
+#define LARGURA_LOGICA 1200
+#define ALTURA_LOGICA 800
+#define TAB_X 34
+#define TAB_Y 180
+#define TAB_TAM 86
+#define TAB_GAP 20
 #define INTRO_PARTICULAS 240
 #define INTRO_DURACAO 15.5f
 #define INTRO_AUDIO_FADE_DURACAO 5.0f
@@ -166,6 +168,47 @@ static int MedirTextoUI(const char *texto, int tamanho) {
 #define DrawText(texto, x, y, tamanho, cor) TextoUI(texto, x, y, tamanho, cor)
 #define MeasureText(texto, tamanho) MedirTextoUI(texto, tamanho)
 
+static Vector2 mouseGUI = {0.0f, 0.0f};
+
+static Vector2 obterMouseRealGUI(void) {
+    return GetMousePosition();
+}
+
+static Rectangle calcularAreaRenderGUI(void) {
+    float escalaX = (float)GetScreenWidth() / LARGURA_LOGICA;
+    float escalaY = (float)GetScreenHeight() / ALTURA_LOGICA;
+    float escala = escalaX < escalaY ? escalaX : escalaY;
+    float largura = LARGURA_LOGICA * escala;
+    float altura = ALTURA_LOGICA * escala;
+
+    return (Rectangle){
+        (GetScreenWidth() - largura) / 2.0f,
+        (GetScreenHeight() - altura) / 2.0f,
+        largura,
+        altura
+    };
+}
+
+static void atualizarMouseLogicoGUI(Rectangle areaRender) {
+    Vector2 mouseReal = obterMouseRealGUI();
+
+    mouseGUI.x = (mouseReal.x - areaRender.x) * LARGURA_LOGICA / areaRender.width;
+    mouseGUI.y = (mouseReal.y - areaRender.y) * ALTURA_LOGICA / areaRender.height;
+
+    if (
+        mouseReal.x < areaRender.x ||
+        mouseReal.x > areaRender.x + areaRender.width ||
+        mouseReal.y < areaRender.y ||
+        mouseReal.y > areaRender.y + areaRender.height
+    ) {
+        mouseGUI = (Vector2){-1000.0f, -1000.0f};
+    }
+}
+
+#define GetMousePosition() mouseGUI
+#define GetScreenWidth() LARGURA_LOGICA
+#define GetScreenHeight() ALTURA_LOGICA
+
 typedef struct {
     char itens[6][160];
     int quantidade;
@@ -204,9 +247,9 @@ static void desenharHistoricoAcoes(HistoricoAcoesGUI *historico, int x, int y) {
     }
 
     for (int i = 0; i < historico->quantidade; i++) {
-        int posY = y + 38 + i * 28;
+        int posY = y + 34 + i * 23;
         Color cor = (i == historico->quantidade - 1) ? COR_TEXTO : COR_TEXTO_FRACO;
-        DrawText(historico->itens[i], x, posY, 17, cor);
+        DrawText(historico->itens[i], x, posY, 15, cor);
     }
 }
 
@@ -227,6 +270,30 @@ static void desenharBotao(BotaoGUI botao, Color cor) {
         fonte,
         COR_TEXTO
     );
+}
+
+static int desenharSetaVoltarMenu(void) {
+    Rectangle area = {28, 28, 54, 46};
+    Vector2 mouse = GetMousePosition();
+    int hover = CheckCollisionPointRec(mouse, area);
+    Color fundo = hover ? ColorBrightness(COR_PAINEL_CLARO, 0.18f) : COR_PAINEL_CLARO;
+
+    DrawRectangleRounded(area, 0.18f, 10, fundo);
+    DrawRectangleRoundedLines(area, 0.18f, 10, Fade(COR_DESTAQUE, 0.48f));
+    DrawTriangle(
+        (Vector2){area.x + 18, area.y + area.height / 2.0f},
+        (Vector2){area.x + 34, area.y + 14},
+        (Vector2){area.x + 34, area.y + area.height - 14},
+        COR_TEXTO
+    );
+    DrawLineEx(
+        (Vector2){area.x + 27, area.y + area.height / 2.0f},
+        (Vector2){area.x + 41, area.y + area.height / 2.0f},
+        4.0f,
+        COR_TEXTO
+    );
+
+    return hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
 static void desenharTitulo(const char *titulo, const char *subtitulo) {
@@ -447,11 +514,26 @@ static void desenharTextoCentroCasa(const char *texto, Vector2 centro, int y, in
 }
 
 static void desenharPeao(Vector2 posicao, Color cor, int ativo) {
-    DrawCircle((int)posicao.x, (int)posicao.y, ativo ? 12 : 9, cor);
-    DrawCircle((int)posicao.x - 3, (int)posicao.y - 4, ativo ? 4 : 3, Fade(WHITE, 0.45f));
+    float tamanho = ativo ? 18.0f : 14.0f;
+    Vector2 nariz = {posicao.x, posicao.y - tamanho};
+    Vector2 baseEsq = {posicao.x - tamanho * 0.62f, posicao.y + tamanho * 0.72f};
+    Vector2 baseDir = {posicao.x + tamanho * 0.62f, posicao.y + tamanho * 0.72f};
+    Vector2 asaEsqA = {posicao.x - tamanho * 0.2f, posicao.y + tamanho * 0.2f};
+    Vector2 asaEsqB = {posicao.x - tamanho * 1.08f, posicao.y + tamanho * 0.9f};
+    Vector2 asaEsqC = {posicao.x - tamanho * 0.48f, posicao.y + tamanho * 0.62f};
+    Vector2 asaDirA = {posicao.x + tamanho * 0.2f, posicao.y + tamanho * 0.2f};
+    Vector2 asaDirB = {posicao.x + tamanho * 1.08f, posicao.y + tamanho * 0.9f};
+    Vector2 asaDirC = {posicao.x + tamanho * 0.48f, posicao.y + tamanho * 0.62f};
+
+    DrawTriangle(asaEsqA, asaEsqB, asaEsqC, Fade(cor, 0.72f));
+    DrawTriangle(asaDirA, asaDirC, asaDirB, Fade(cor, 0.72f));
+    DrawTriangle(nariz, baseEsq, baseDir, cor);
+    DrawTriangleLines(nariz, baseEsq, baseDir, Fade(WHITE, 0.72f));
+    DrawCircleV((Vector2){posicao.x, posicao.y - tamanho * 0.2f}, tamanho * 0.22f, Fade(WHITE, 0.76f));
+    DrawCircleV((Vector2){posicao.x, posicao.y + tamanho * 0.82f}, tamanho * 0.18f, COR_DESTAQUE);
 
     if (ativo) {
-        DrawCircleLines((int)posicao.x, (int)posicao.y, 16, WHITE);
+        DrawCircleLines((int)posicao.x, (int)posicao.y, tamanho + 7.0f, Fade(COR_DESTAQUE, 0.85f));
     }
 }
 
@@ -632,7 +714,9 @@ static void DrawIntro(IntroGUI *intro) {
         "Em uma sala de aula muito distante...",
         "",
         "Os alunos sao desafiados pelo Lorde Soussa",
-        "a completarem o tabuleiro.",
+        "a completarem o tabuleiro e responderem as perguntas.",
+        "",
+        "Cuidado com o Edag e que a força esteja com voce.",
         "",
         "Boa sorte a todos."
     };
@@ -1294,6 +1378,33 @@ static void desenharAnaliseTemaGUI(int x, int y) {
     }
 }
 
+static void desenharFundoEspacialTabuleiro(Rectangle area) {
+    DrawRectangleRounded(area, 0.04f, 12, (Color){3, 4, 9, 255});
+    DrawRectangleRoundedLines(area, 0.04f, 12, Fade(COR_DESTAQUE, 0.28f));
+
+    for (int i = 0; i < 120; i++) {
+        float x = area.x + 18.0f + (float)((i * 73) % ((int)area.width - 36));
+        float y = area.y + 18.0f + (float)((i * 47) % ((int)area.height - 36));
+        float raio = 0.8f + (float)((i * 11) % 18) / 10.0f;
+        float alpha = 0.24f + (float)((i * 17) % 54) / 100.0f;
+        Color cor = (i % 5 == 0) ? COR_ALERTA : ((i % 7 == 0) ? COR_DESTAQUE : COR_TEXTO);
+
+        DrawCircleV((Vector2){x, y}, raio, Fade(cor, alpha));
+
+        if (i % 19 == 0) {
+            DrawCircleV((Vector2){x, y}, raio * 3.0f, Fade(cor, alpha * 0.08f));
+        }
+    }
+
+    DrawCircleGradient(
+        (int)(area.x + area.width * 0.52f),
+        (int)(area.y + area.height * 0.48f),
+        210.0f,
+        Fade(COR_AZUL_ALTERNATIVA_HOVER, 0.16f),
+        Fade(COR_FUNDO, 0.0f)
+    );
+}
+
 static void desenharTabuleiroGUI(
     Casa *inicio,
     JogadorGUI jogadores[],
@@ -1302,16 +1413,18 @@ static void desenharTabuleiroGUI(
     AnimacaoGUI *animacao
 ) {
     int jogadorPulando = (animacao != NULL && animacao->movimentoAtivo) ? animacao->jogador : -1;
+    Rectangle areaTabuleiro = {20, 150, 700, 640};
 
-    DrawRectangleRounded((Rectangle){24, 186, 666, 606}, 0.04f, 12, COR_PAINEL);
+    desenharFundoEspacialTabuleiro(areaTabuleiro);
 
     // A trilha conecta as casas em ordem, deixando o tabuleiro com cara de percurso.
     for (int id = 0; id < CASA_FINAL; id++) {
         Vector2 a = centroCasaTabuleiro(id);
         Vector2 b = centroCasaTabuleiro(id + 1);
 
-        DrawLineEx(a, b, 14.0f, Fade(COR_TRILHA, 0.82f));
-        DrawLineEx(a, b, 5.0f, Fade(COR_DESTAQUE, 0.44f));
+        DrawLineEx(a, b, 18.0f, Fade(COR_TRILHA, 0.68f));
+        DrawLineEx(a, b, 7.0f, Fade(COR_DESTAQUE, 0.58f));
+        DrawLineEx(a, b, 2.0f, Fade(COR_TEXTO, 0.46f));
     }
 
     for (int id = 0; id <= CASA_FINAL; id++) {
@@ -1337,10 +1450,10 @@ static void desenharTabuleiroGUI(
             }
         }
 
-        DrawCircleV((Vector2){centro.x + 4, centro.y + 6}, casaAtualDoJogador ? 38 : 34, Fade(BLACK, 0.34f));
-        DrawCircleV(centro, casaAtualDoJogador ? 38 : 34, casaAtualDoJogador ? COR_TEXTO : Fade(COR_TEXTO, 0.16f));
-        DrawCircleV(centro, casaAtualDoJogador ? 33 : 30, corBase);
-        DrawCircleLines((int)centro.x, (int)centro.y, casaAtualDoJogador ? 33 : 30, Fade(BLACK, 0.55f));
+        DrawCircleV((Vector2){centro.x + 4, centro.y + 6}, casaAtualDoJogador ? 42 : 37, Fade(BLACK, 0.44f));
+        DrawCircleV(centro, casaAtualDoJogador ? 42 : 37, casaAtualDoJogador ? COR_TEXTO : Fade(COR_TEXTO, 0.16f));
+        DrawCircleV(centro, casaAtualDoJogador ? 36 : 32, corBase);
+        DrawCircleLines((int)centro.x, (int)centro.y, casaAtualDoJogador ? 36 : 32, Fade(BLACK, 0.55f));
 
         snprintf(idTexto, sizeof(idTexto), "%02d", casa->id);
         desenharTextoCentroCasa(idTexto, centro, (int)centro.y - 24, 24, WHITE);
@@ -1560,10 +1673,17 @@ static void desenharTelaMenu(TelaGUI *telaAtual, Texture2D *patoMenu) {
 }
 
 int main(void) {
-    const int largura = 1200;
-    const int altura = 800;
+    const int largura = LARGURA_LOGICA;
+    const int altura = ALTURA_LOGICA;
 
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(largura, altura, "Jogo do SUSA - ARSENAI");
+    SetWindowSize(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()));
+    ToggleFullscreen();
+
+    RenderTexture2D telaLogica = LoadRenderTexture(LARGURA_LOGICA, ALTURA_LOGICA);
+    SetTextureFilter(telaLogica.texture, TEXTURE_FILTER_BILINEAR);
+
     fonteUI = LoadFontEx("C:\\Windows\\Fonts\\segoeuib.ttf", 64, NULL, 0);
     if (fonteUI.texture.id != 0) {
         SetTextureFilter(fonteUI.texture, TEXTURE_FILTER_BILINEAR);
@@ -1637,6 +1757,9 @@ int main(void) {
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
         TipoMovimentoGUI movimentoFinalizado = MOVIMENTO_NENHUM;
+        Rectangle areaRender = calcularAreaRenderGUI();
+
+        atualizarMouseLogicoGUI(areaRender);
 
         if (telaAtual == TELA_INTRO) {
             UpdateIntro(&intro, dt, &telaAtual);
@@ -1719,7 +1842,7 @@ int main(void) {
         sincronizarMusicaTelaGUI(&audio, telaAtual);
         AtualizarAudioGUI(&audio, &intro);
 
-        BeginDrawing();
+        BeginTextureMode(telaLogica);
         ClearBackground(COR_FUNDO);
 
         if (telaAtual == TELA_INTRO) {
@@ -1732,6 +1855,9 @@ int main(void) {
             int centroX = GetScreenWidth() / 2;
             DrawRectangleRounded((Rectangle){centroX - 260.0f, 145, 520, 360}, 0.06f, 12, COR_PAINEL);
             DrawRectangleRoundedLines((Rectangle){centroX - 260.0f, 145, 520, 360}, 0.06f, 12, Fade(COR_DESTAQUE, 0.45f));
+            if (desenharSetaVoltarMenu()) {
+                telaAtual = TELA_MENU;
+            }
             desenharTextoCentralizado("Escolha o grupo", 185, 34, COR_TEXTO);
             desenharTextoCentralizado("Esse valor sera salvo no historico_respostas.csv.", 230, 18, COR_TEXTO_FRACO);
 
@@ -1764,6 +1890,11 @@ int main(void) {
             int centroX = GetScreenWidth() / 2;
             DrawRectangleRounded((Rectangle){centroX - 330.0f, 110, 660, 500}, 0.05f, 12, COR_PAINEL);
             DrawRectangleRoundedLines((Rectangle){centroX - 330.0f, 110, 660, 500}, 0.05f, 12, Fade(COR_DESTAQUE, 0.45f));
+            if (desenharSetaVoltarMenu()) {
+                jogadorCadastro = 0;
+                nomeDigitado[0] = '\0';
+                telaAtual = TELA_MENU;
+            }
             desenharTextoCentralizado("Cadastro dos jogadores", 145, 34, COR_TEXTO);
             desenharTextoCentralizado("Digite o nome e clique em confirmar.", 188, 20, COR_TEXTO_FRACO);
 
@@ -1861,9 +1992,15 @@ int main(void) {
         }
         else if (telaAtual == TELA_JOGO) {
             desenharTitulo("Tabuleiro", mensagem);
+            if (desenharSetaVoltarMenu()) {
+                memset(&animacao, 0, sizeof(animacao));
+                atrasoAcao = 0.0f;
+                trocarJogadorDepoisAtraso = 0;
+                telaAtual = TELA_MENU;
+            }
             desenharTabuleiroGUI(inicioTabuleiro, jogadores, qtdJogadores, jogadorAtual, &animacao);
             desenharPainelJogadores(jogadores, qtdJogadores, jogadorAtual, grupoHistorico);
-            desenharHistoricoAcoes(&historicoAcoes, 650, 625);
+            desenharHistoricoAcoes(&historicoAcoes, 730, 535);
 
             char dadoTexto[40];
             int dadoDesenhado = animacao.dadoRolando ? animacao.dadoVisivel : (dadoAtual > 0 ? dadoAtual : 1);
@@ -2064,6 +2201,18 @@ int main(void) {
             }
         }
 
+        EndTextureMode();
+
+        BeginDrawing();
+        ClearBackground(BLACK);
+        DrawTexturePro(
+            telaLogica.texture,
+            (Rectangle){0, 0, (float)LARGURA_LOGICA, -(float)ALTURA_LOGICA},
+            areaRender,
+            (Vector2){0, 0},
+            0.0f,
+            WHITE
+        );
         EndDrawing();
     }
 
@@ -2077,6 +2226,7 @@ int main(void) {
     if (patoMenu.id != 0) {
         UnloadTexture(patoMenu);
     }
+    UnloadRenderTexture(telaLogica);
     if (fonteUICarregada) {
         UnloadFont(fonteUI);
     }

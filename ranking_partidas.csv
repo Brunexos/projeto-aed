@@ -19,3 +19,7 @@ id_partida;nome_jogador;acertos;erros;pontuacao
 9;Cesar;2;1;25
 10;Cesar;2;0;60
 10;Bruno;1;0;30
+11;Bruno;3;1;65
+11;Cesar;2;0;50
+12;Teste2;3;0;90
+12;Teste1;2;0;50
