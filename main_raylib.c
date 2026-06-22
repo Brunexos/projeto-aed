@@ -24,7 +24,8 @@
 #define TAB_TAM 82
 #define TAB_GAP 18
 #define INTRO_PARTICULAS 240
-#define INTRO_DURACAO 7.2f
+#define INTRO_DURACAO 15.5f
+#define INTRO_AUDIO_FADE_DURACAO 5.0f
 
 typedef enum {
     TELA_INTRO,
@@ -105,17 +106,30 @@ typedef struct {
 typedef struct {
     float tempo;
     int finalizada;
-    int audioPronto;
-    int musicaCarregada;
-    int logoSfxCarregado;
-    int transitionSfxCarregado;
-    int tocouLogo;
-    int tocouTransition;
+    TelaGUI destino;
     ParticulaIntroGUI particulas[INTRO_PARTICULAS];
-    Music musica;
-    Sound logoSfx;
-    Sound transitionSfx;
 } IntroGUI;
+
+typedef enum {
+    MUSICA_NENHUMA,
+    MUSICA_MENU,
+    MUSICA_INTRO,
+    MUSICA_JOGO
+} MusicaTemaGUI;
+
+typedef struct {
+    int audioPronto;
+    int menuCarregada;
+    int introCarregada;
+    int jogoCarregada;
+    float menuVolume;
+    float introVolume;
+    float jogoVolume;
+    MusicaTemaGUI atual;
+    Music menu;
+    Music intro;
+    Music jogo;
+} AudioGUI;
 
 static const Color COR_FUNDO = {5, 6, 8, 255};
 static const Color COR_PAINEL = {16, 18, 22, 255};
@@ -216,7 +230,7 @@ static void desenharBotao(BotaoGUI botao, Color cor) {
 }
 
 static void desenharTitulo(const char *titulo, const char *subtitulo) {
-    DrawText("JOGO DO SUSA", 40, 30, 42, COR_TEXTO);
+    DrawText("Caminho do conhecimento", 40, 30, 42, COR_TEXTO);
     DrawText("ARSENAI", 43, 75, 20, COR_DESTAQUE);
 
     DrawText(titulo, 40, 125, 32, COR_TEXTO);
@@ -530,15 +544,7 @@ static void encerrarIntro(IntroGUI *intro, TelaGUI *telaAtual) {
 
     intro->finalizada = 1;
 
-    if (intro->transitionSfxCarregado) {
-        PlaySound(intro->transitionSfx);
-    }
-
-    if (intro->musicaCarregada) {
-        StopMusicStream(intro->musica);
-    }
-
-    *telaAtual = TELA_MENU;
+    *telaAtual = intro->destino;
 }
 
 static void reiniciarParticulaIntro(ParticulaIntroGUI *particula, int largura, int altura, int nascerNoCentro) {
@@ -557,14 +563,14 @@ static void reiniciarParticulaIntro(ParticulaIntroGUI *particula, int largura, i
     particula->velocidade = 18.0f + profundidade * 185.0f + (float)(rand() % 30);
     particula->raio = 0.7f + profundidade * 1.65f;
 
-    if (tipoCor <= 4) {
-        particula->cor = COR_TEXTO;
-    }
-    else if (tipoCor <= 6) {
+    if (tipoCor <= 3) {
         particula->cor = COR_ALERTA;
     }
-    else {
+    else if (tipoCor <= 6) {
         particula->cor = COR_DESTAQUE;
+    }
+    else {
+        particula->cor = (Color){255, 224, 154, 255};
     }
 }
 
@@ -574,37 +580,31 @@ static void InitIntro(IntroGUI *intro) {
     }
 
     memset(intro, 0, sizeof(*intro));
+    intro->finalizada = 1;
+    intro->destino = TELA_JOGO;
 
     for (int i = 0; i < INTRO_PARTICULAS; i++) {
         reiniciarParticulaIntro(&intro->particulas[i], 1200, 800, 0);
     }
+}
 
-    InitAudioDevice();
-    intro->audioPronto = IsAudioDeviceReady();
-
-    if (!intro->audioPronto) {
+static void IniciarIntro(IntroGUI *intro, TelaGUI destino) {
+    if (intro == NULL) {
         return;
     }
 
-    if (FileExists("assets/intro_theme.ogg")) {
-        intro->musica = LoadMusicStream("assets/intro_theme.ogg");
+    intro->tempo = 0.0f;
+    intro->finalizada = 0;
+    intro->destino = destino;
 
-        if (IsMusicValid(intro->musica)) {
-            intro->musicaCarregada = 1;
-            SetMusicVolume(intro->musica, 0.72f);
-            PlayMusicStream(intro->musica);
-        }
+    for (int i = 0; i < INTRO_PARTICULAS; i++) {
+        reiniciarParticulaIntro(&intro->particulas[i], GetScreenWidth(), GetScreenHeight(), 0);
     }
 
-    if (FileExists("assets/logo_sfx.wav")) {
-        intro->logoSfx = LoadSound("assets/logo_sfx.wav");
-        intro->logoSfxCarregado = IsSoundValid(intro->logoSfx);
-    }
+}
 
-    if (FileExists("assets/transition_sfx.wav")) {
-        intro->transitionSfx = LoadSound("assets/transition_sfx.wav");
-        intro->transitionSfxCarregado = IsSoundValid(intro->transitionSfx);
-    }
+static int IntroTerminou(IntroGUI *intro) {
+    return intro != NULL && intro->tempo >= INTRO_DURACAO;
 }
 
 static void UpdateIntro(IntroGUI *intro, float dt, TelaGUI *telaAtual) {
@@ -614,50 +614,11 @@ static void UpdateIntro(IntroGUI *intro, float dt, TelaGUI *telaAtual) {
 
     intro->tempo += dt;
 
-    for (int i = 0; i < INTRO_PARTICULAS; i++) {
-        ParticulaIntroGUI *p = &intro->particulas[i];
-        float aceleracao = 1.0f + suavizarIntro(intervaloIntro(intro->tempo, 0.8f, 2.0f)) * 1.25f;
-
-        p->posicao.x += p->direcao.x * p->velocidade * aceleracao * dt;
-        p->posicao.y += p->direcao.y * p->velocidade * aceleracao * dt;
-
-        if (
-            p->posicao.x < -80.0f ||
-            p->posicao.x > GetScreenWidth() + 80.0f ||
-            p->posicao.y < -80.0f ||
-            p->posicao.y > GetScreenHeight() + 80.0f
-        ) {
-            reiniciarParticulaIntro(p, GetScreenWidth(), GetScreenHeight(), 1);
-        }
-    }
-
-    if (intro->musicaCarregada) {
-        float fadeMusica = 1.0f - intervaloIntro(intro->tempo, INTRO_DURACAO - 1.1f, 1.1f);
-        UpdateMusicStream(intro->musica);
-        SetMusicVolume(intro->musica, 0.72f * limitar01(fadeMusica));
-    }
-
-    if (!intro->tocouLogo && intro->tempo >= 1.35f) {
-        intro->tocouLogo = 1;
-
-        if (intro->logoSfxCarregado) {
-            PlaySound(intro->logoSfx);
-        }
-    }
-
-    if (!intro->tocouTransition && intro->tempo >= INTRO_DURACAO - 0.8f) {
-        intro->tocouTransition = 1;
-
-        if (intro->transitionSfxCarregado) {
-            PlaySound(intro->transitionSfx);
-        }
-    }
-
     if (
         IsKeyPressed(KEY_ENTER) ||
         IsKeyPressed(KEY_SPACE) ||
         IsMouseButtonPressed(MOUSE_LEFT_BUTTON) ||
-        intro->tempo >= INTRO_DURACAO
+        IntroTerminou(intro)
     ) {
         encerrarIntro(intro, telaAtual);
     }
@@ -665,25 +626,23 @@ static void UpdateIntro(IntroGUI *intro, float dt, TelaGUI *telaAtual) {
 
 static void DrawIntro(IntroGUI *intro) {
     float tempo = intro != NULL ? intro->tempo : 0.0f;
-    float brilho = suavizarIntro(intervaloIntro(tempo, 0.35f, 1.2f));
-    float logoAlpha = suavizarIntro(intervaloIntro(tempo, 1.15f, 1.0f));
-    float arsenaiAlpha = suavizarIntro(intervaloIntro(tempo, 2.0f, 0.9f));
-    float fraseAlpha = suavizarIntro(intervaloIntro(tempo, 4.75f, 0.8f));
+    float brilho = suavizarIntro(intervaloIntro(tempo, 0.25f, 1.2f));
     float fadeSaida = intervaloIntro(tempo, INTRO_DURACAO - 1.0f, 1.0f);
-    float pulso = 1.0f + sinf(tempo * 2.2f) * 0.026f;
-    Vector2 centroTela = {(float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f};
+    const char *linhasIntro[] = {
+        "Em uma sala de aula muito distante...",
+        "",
+        "Os alunos sao desafiados pelo Lorde Soussa",
+        "a completarem o tabuleiro.",
+        "",
+        "Boa sorte a todos."
+    };
+    const int totalLinhasIntro = 6;
 
     if (intro != NULL) {
         for (int i = 0; i < INTRO_PARTICULAS; i++) {
             ParticulaIntroGUI p = intro->particulas[i];
             float alpha = 0.22f + p.profundidade * 0.58f;
-            float comprimento = 3.0f + p.profundidade * 18.0f + suavizarIntro(intervaloIntro(tempo, 1.0f, 2.4f)) * 18.0f;
-            Vector2 rastro = {
-                p.posicao.x - p.direcao.x * comprimento,
-                p.posicao.y - p.direcao.y * comprimento
-            };
 
-            DrawLineEx(rastro, p.posicao, p.raio * 0.72f, Fade(p.cor, alpha * 0.28f));
             DrawCircleV(p.posicao, p.raio, Fade(p.cor, alpha));
 
             if (p.raio > 1.8f) {
@@ -695,30 +654,40 @@ static void DrawIntro(IntroGUI *intro) {
     DrawCircleGradient(
         GetScreenWidth() / 2,
         GetScreenHeight() / 2,
-        230.0f + sinf(tempo * 2.0f) * 16.0f,
-        Fade(COR_DESTAQUE, 0.36f * brilho),
+        190.0f + sinf(tempo * 1.5f) * 12.0f,
+        Fade(COR_DESTAQUE, 0.18f * brilho),
         Fade(COR_FUNDO, 0.0f)
     );
 
-    DrawCircleGradient(
-        GetScreenWidth() / 2,
-        GetScreenHeight() / 2,
-        145.0f,
-        Fade(COR_AZUL_ALTERNATIVA_HOVER, 0.22f * brilho),
-        Fade(COR_FUNDO, 0.0f)
-    );
+    // Crawl em perspectiva: as linhas sobem e reduzem a escala ao se afastarem.
+    {
+        float progresso = suavizarIntro(intervaloIntro(tempo, 0.75f, INTRO_DURACAO - 1.8f));
+        float baseY = 790.0f - progresso * 760.0f;
 
-    DrawLineEx(
-        (Vector2){centroTela.x - 260.0f, centroTela.y + 28.0f},
-        (Vector2){centroTela.x + 260.0f, centroTela.y + 28.0f},
-        2.0f,
-        Fade(COR_DESTAQUE, logoAlpha * 0.35f)
-    );
+        for (int i = 0; i < totalLinhasIntro; i++) {
+            float y = baseY + i * 68.0f;
+            float profundidadeTela = limitar01((y - 60.0f) / 660.0f);
+            float escala = 0.54f + profundidadeTela * 0.86f;
+            float alphaEntrada = intervaloIntro(tempo, 0.75f, 0.8f);
+            float alphaTopo = limitar01((y - 34.0f) / 150.0f);
+            float alphaBase = limitar01((GetScreenHeight() + 60.0f - y) / 180.0f);
+            float alpha = alphaEntrada * alphaTopo * alphaBase * (1.0f - fadeSaida);
+            float tamanho = (i == 0 || i == totalLinhasIntro - 1) ? 34.0f : 30.0f;
 
-    desenharTextoIntroCentralizado("JOGO DO SUSA", 220.0f, 68.0f, Fade(COR_TEXTO, logoAlpha), pulso);
-    desenharTextoIntroCentralizado("ARSENAI", 300.0f, 30.0f, Fade(COR_DESTAQUE, arsenaiAlpha), 1.0f + sinf(tempo * 4.0f) * 0.025f);
+            if (linhasIntro[i][0] == '\0') {
+                continue;
+            }
 
-    desenharTextoIntroCentralizado("Conhecimento, sorte e estrategia", 500.0f, 25.0f, Fade(COR_TEXTO, fraseAlpha), 1.0f);
+            desenharTextoIntroCentralizado(
+                linhasIntro[i],
+                y,
+                tamanho,
+                Fade(COR_ALERTA, alpha),
+                escala
+            );
+        }
+    }
+
     desenharTextoIntroCentralizado("ENTER, ESPACO ou clique para pular", 742.0f, 16.0f, Fade(COR_TEXTO_FRACO, 0.55f), 1.0f);
 
     if (tempo < 0.65f) {
@@ -735,26 +704,217 @@ static void UnloadIntro(IntroGUI *intro) {
         return;
     }
 
-    if (intro->musicaCarregada) {
-        StopMusicStream(intro->musica);
-        UnloadMusicStream(intro->musica);
-        intro->musicaCarregada = 0;
+    intro->finalizada = 1;
+}
+
+static int carregarMusicaGUI(Music *musica, const char *arquivo, float volume) {
+    if (musica == NULL || arquivo == NULL || !FileExists(arquivo)) {
+        return 0;
     }
 
-    if (intro->logoSfxCarregado) {
-        UnloadSound(intro->logoSfx);
-        intro->logoSfxCarregado = 0;
+    *musica = LoadMusicStream(arquivo);
+
+    if (!IsMusicValid(*musica)) {
+        return 0;
     }
 
-    if (intro->transitionSfxCarregado) {
-        UnloadSound(intro->transitionSfx);
-        intro->transitionSfxCarregado = 0;
+    SetMusicVolume(*musica, volume);
+    return 1;
+}
+
+static void InitAudioGUI(AudioGUI *audio) {
+    if (audio == NULL) {
+        return;
     }
 
-    if (intro->audioPronto) {
-        CloseAudioDevice();
-        intro->audioPronto = 0;
+    memset(audio, 0, sizeof(*audio));
+    audio->atual = MUSICA_NENHUMA;
+    audio->menuVolume = 0.58f;
+    audio->introVolume = 0.72f;
+    audio->jogoVolume = 0.54f;
+
+    InitAudioDevice();
+    audio->audioPronto = IsAudioDeviceReady();
+
+    if (!audio->audioPronto) {
+        return;
     }
+
+    audio->menuCarregada = carregarMusicaGUI(&audio->menu, "assets/menu_theme.mp3", audio->menuVolume);
+    audio->introCarregada = carregarMusicaGUI(&audio->intro, "assets/intro_theme.mp3", audio->introVolume);
+    audio->jogoCarregada = carregarMusicaGUI(&audio->jogo, "assets/game_theme.mp3", audio->jogoVolume);
+}
+
+static Music* musicaAtualGUI(AudioGUI *audio) {
+    if (audio == NULL) {
+        return NULL;
+    }
+
+    if (audio->atual == MUSICA_MENU && audio->menuCarregada) {
+        return &audio->menu;
+    }
+
+    if (audio->atual == MUSICA_INTRO && audio->introCarregada) {
+        return &audio->intro;
+    }
+
+    if (audio->atual == MUSICA_JOGO && audio->jogoCarregada) {
+        return &audio->jogo;
+    }
+
+    return NULL;
+}
+
+static int musicaTemaCarregadaGUI(AudioGUI *audio, MusicaTemaGUI tema) {
+    if (audio == NULL || !audio->audioPronto) {
+        return 0;
+    }
+
+    if (tema == MUSICA_MENU) {
+        return audio->menuCarregada;
+    }
+
+    if (tema == MUSICA_INTRO) {
+        return audio->introCarregada;
+    }
+
+    if (tema == MUSICA_JOGO) {
+        return audio->jogoCarregada;
+    }
+
+    return 0;
+}
+
+static Music* ponteiroMusicaTemaGUI(AudioGUI *audio, MusicaTemaGUI tema) {
+    if (audio == NULL) {
+        return NULL;
+    }
+
+    if (tema == MUSICA_MENU) {
+        return &audio->menu;
+    }
+
+    if (tema == MUSICA_INTRO) {
+        return &audio->intro;
+    }
+
+    if (tema == MUSICA_JOGO) {
+        return &audio->jogo;
+    }
+
+    return NULL;
+}
+
+static float volumeTemaGUI(AudioGUI *audio, MusicaTemaGUI tema) {
+    if (audio == NULL) {
+        return 0.0f;
+    }
+
+    if (tema == MUSICA_MENU) {
+        return audio->menuVolume;
+    }
+
+    if (tema == MUSICA_INTRO) {
+        return audio->introVolume;
+    }
+
+    if (tema == MUSICA_JOGO) {
+        return audio->jogoVolume;
+    }
+
+    return 0.0f;
+}
+
+static void tocarMusicaGUI(AudioGUI *audio, MusicaTemaGUI tema) {
+    Music *musicaAtual;
+    Music *proximaMusica;
+
+    if (audio == NULL || !audio->audioPronto || audio->atual == tema) {
+        return;
+    }
+
+    musicaAtual = musicaAtualGUI(audio);
+
+    if (musicaAtual != NULL) {
+        StopMusicStream(*musicaAtual);
+    }
+
+    audio->atual = MUSICA_NENHUMA;
+
+    if (!musicaTemaCarregadaGUI(audio, tema)) {
+        return;
+    }
+
+    proximaMusica = ponteiroMusicaTemaGUI(audio, tema);
+
+    if (proximaMusica == NULL) {
+        return;
+    }
+
+    SetMusicVolume(*proximaMusica, volumeTemaGUI(audio, tema));
+    PlayMusicStream(*proximaMusica);
+    audio->atual = tema;
+}
+
+static void AtualizarAudioGUI(AudioGUI *audio, IntroGUI *intro) {
+    Music *musica;
+
+    if (audio == NULL || !audio->audioPronto) {
+        return;
+    }
+
+    musica = musicaAtualGUI(audio);
+
+    if (musica != NULL) {
+        UpdateMusicStream(*musica);
+
+        if (audio->atual == MUSICA_INTRO && intro != NULL) {
+            float fade = 1.0f - intervaloIntro(
+                intro->tempo,
+                INTRO_DURACAO - INTRO_AUDIO_FADE_DURACAO,
+                INTRO_AUDIO_FADE_DURACAO
+            );
+
+            SetMusicVolume(*musica, audio->introVolume * limitar01(fade));
+        }
+    }
+}
+
+static void sincronizarMusicaTelaGUI(AudioGUI *audio, TelaGUI telaAtual) {
+    if (telaAtual == TELA_INTRO) {
+        tocarMusicaGUI(audio, MUSICA_INTRO);
+    }
+    else if (
+        telaAtual == TELA_JOGO ||
+        telaAtual == TELA_ESCOLHER_DIFICULDADE ||
+        telaAtual == TELA_PERGUNTA
+    ) {
+        tocarMusicaGUI(audio, MUSICA_JOGO);
+    }
+    else {
+        tocarMusicaGUI(audio, MUSICA_MENU);
+    }
+}
+
+static void UnloadAudioGUI(AudioGUI *audio) {
+    if (audio == NULL || !audio->audioPronto) {
+        return;
+    }
+
+    if (audio->menuCarregada) {
+        UnloadMusicStream(audio->menu);
+    }
+
+    if (audio->introCarregada) {
+        UnloadMusicStream(audio->intro);
+    }
+
+    if (audio->jogoCarregada) {
+        UnloadMusicStream(audio->jogo);
+    }
+
+    CloseAudioDevice();
+    audio->audioPronto = 0;
 }
 
 static void iniciarMovimentoAnimado(
@@ -1357,16 +1517,16 @@ static void finalizarPartidaGUI(
     (void) indiceVencedor;
 }
 
-static void desenharTelaMenu(TelaGUI *telaAtual) {
+static void desenharTelaMenu(TelaGUI *telaAtual, Texture2D *patoMenu) {
     int centroX = GetScreenWidth() / 2;
     Rectangle painel = {centroX - 245.0f, 125, 490, 430};
 
     DrawRectangleRounded(painel, 0.06f, 12, COR_PAINEL);
     DrawRectangleRoundedLines(painel, 0.06f, 12, Fade(COR_DESTAQUE, 0.45f));
 
-    desenharTextoCentralizado("JOGO DO SUSA", 165, 48, COR_TEXTO);
+    desenharTextoCentralizado("Caminho do conhecimento", 165, 48, COR_TEXTO);
     desenharTextoCentralizado("ARSENAI", 218, 22, COR_DESTAQUE);
-    desenharTextoCentralizado("Versao grafica com Raylib", 258, 24, COR_TEXTO_FRACO);
+    desenharTextoCentralizado("Boas Vindas", 258, 24, COR_TEXTO_FRACO);
 
     BotaoGUI iniciar = {{centroX - 150.0f, 315, 300, 60}, "Iniciar jogo"};
     BotaoGUI ranking = {{centroX - 150.0f, 390, 300, 60}, "Ver ranking"};
@@ -1377,6 +1537,14 @@ static void desenharTelaMenu(TelaGUI *telaAtual) {
     desenharBotao(sair, COR_ERRO);
 
     desenharTextoCentralizado("Use o mouse para jogar, rolar o dado e responder perguntas.", 590, 20, COR_TEXTO_FRACO);
+
+    if (patoMenu != NULL && patoMenu->id != 0) {
+        Rectangle origem = {0, 0, (float)patoMenu->width, (float)patoMenu->height};
+        Rectangle destino = {28, 612, 150, 150};
+
+        DrawTexturePro(*patoMenu, origem, destino, (Vector2){0, 0}, 0.0f, WHITE);
+        DrawRectangleRoundedLines(destino, 0.04f, 8, Fade(COR_DESTAQUE, 0.65f));
+    }
 
     if (botaoClicado(iniciar)) {
         *telaAtual = TELA_GRUPO;
@@ -1408,13 +1576,25 @@ int main(void) {
     IntroGUI intro;
     InitIntro(&intro);
 
+    AudioGUI audio;
+    InitAudioGUI(&audio);
+
+    Texture2D patoMenu = {0};
+    if (FileExists("assets/patotv.jpg")) {
+        patoMenu = LoadTexture("assets/patotv.jpg");
+
+        if (patoMenu.id != 0) {
+            SetTextureFilter(patoMenu, TEXTURE_FILTER_BILINEAR);
+        }
+    }
+
     Casa *inicioTabuleiro = NULL;
     Casa *fimTabuleiro = NULL;
     criarTabuleiroPadrao(&inicioTabuleiro, &fimTabuleiro);
     salvarPerguntasCSV();
     inicializarHistoricoRespostasCSV();
 
-    TelaGUI telaAtual = TELA_INTRO;
+    TelaGUI telaAtual = TELA_MENU;
     JogadorGUI jogadores[MAX_GUI_JOGADORES];
     int qtdJogadores = 2;
     int jogadorCadastro = 0;
@@ -1536,6 +1716,9 @@ int main(void) {
             }
         }
 
+        sincronizarMusicaTelaGUI(&audio, telaAtual);
+        AtualizarAudioGUI(&audio, &intro);
+
         BeginDrawing();
         ClearBackground(COR_FUNDO);
 
@@ -1543,7 +1726,7 @@ int main(void) {
             DrawIntro(&intro);
         }
         else if (telaAtual == TELA_MENU) {
-            desenharTelaMenu(&telaAtual);
+            desenharTelaMenu(&telaAtual, &patoMenu);
         }
         else if (telaAtual == TELA_GRUPO) {
             int centroX = GetScreenWidth() / 2;
@@ -1665,7 +1848,8 @@ int main(void) {
                         adicionarAcaoHistorico(&historicoAcoes, acao);
                     }
 
-                    telaAtual = TELA_JOGO;
+                    IniciarIntro(&intro, TELA_JOGO);
+                    telaAtual = TELA_INTRO;
                 }
             }
 
@@ -1889,6 +2073,10 @@ int main(void) {
 
     liberarTabuleiro(inicioTabuleiro);
     UnloadIntro(&intro);
+    UnloadAudioGUI(&audio);
+    if (patoMenu.id != 0) {
+        UnloadTexture(patoMenu);
+    }
     if (fonteUICarregada) {
         UnloadFont(fonteUI);
     }

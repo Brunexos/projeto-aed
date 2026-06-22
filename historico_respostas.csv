@@ -39,3 +39,9 @@ AED;2026.1;Bruno;P008;2;Lista Duplamente Encadeada;Remocao;Medio;B;B;Acertou
 AED;2026.1;Bruno;P012;2;Lista Duplamente Encadeada;Memoria;Dificil;C;C;Acertou
 AED;2026.1;Cesar;P009;1;Ponteiros;Ponteiro para funcao;Dificil;C;B;Errou
 AED;2026.1;Bruno;P004;2;Lista Duplamente Encadeada;Ponteiro anterior;Facil;D;D;Acertou
+AED;2026.1;Cesar;P009;1;Ponteiros;Ponteiro para funcao;Dificil;B;B;Acertou
+AED;2026.1;Bruno;P012;2;Lista Duplamente Encadeada;Memoria;Dificil;C;C;Acertou
+AED;2026.1;Cesar;P010;1;Pilha;Overflow;Dificil;B;B;Acertou
+AED;2026.1;Bruno;P006;1;Ponteiros;Ponteiro para ponteiro;Medio;B;B;Acertou
+AED;2026.1;Cesar;P010;1;Pilha;Overflow;Dificil;B;B;Acertou
+AED;2026.1;Cesar;P009;1;Ponteiros;Ponteiro para funcao;Dificil;D;B;Errou
