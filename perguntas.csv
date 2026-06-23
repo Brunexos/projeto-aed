@@ -11,3 +11,9 @@ P009;1;Ponteiros;Ponteiro para funcao;Dificil;Sintaxe correta de ponteiro para f
 P010;1;Pilha;Overflow;Dificil;Push em pilha cheia gera?
 P011;2;Lista Encadeada;Ciclo;Dificil;O algoritmo de Floyd, tambem chamado de ponteiro rapido e lento, e usado principalmente para:
 P012;2;Lista Duplamente Encadeada;Memoria;Dificil;Comparando com listas simplesmente encadeadas, qual e a principal desvantagem das listas duplamente encadeadas?
+P013;3;Arvore Binaria de Busca;Percurso em BST;Facil;(Arvore Binaria de Busca - BST) Qual metodo de percurso (traversal) em uma Arvore Binaria de Busca deve ser utilizado para visitar/imprimir todos os elementos em ordem estritamente crescente?
+P014;3;Arvores B;Split;Facil;(Arvores B) O que acontece obrigatoriamente em uma Arvore B quando um no atinge sua capacidade maxima de chaves permitidas e uma nova chave precisa ser inserida nele?
+P015;3;Tabela Hash;Encadeamento Separado;Medio;(Tabela Hash) Qual das alternativas abaixo descreve corretamente o metodo de Encadeamento Separado (Separate Chaining) utilizado para tratar colisoes em uma Tabela Hash?
+P016;3;Arvores B e B+;Diferenca entre B e B+;Medio;(Arvores B e B+) Ao estudar os conceitos de Arvores B e Arvores B+, qual e a principal caracteristica arquitetural que diferencia de forma vital a Arvore B+ de uma Arvore B tradicional?
+P017;3;Arvore AVL;Balanceamento;Dificil;(Arvore AVL) Em uma Arvore AVL estritamente balanceada, sabemos que as operacoes sao limitadas no pior caso a O(log n). Qual propriedade exata e permanente da estrutura impoe e garante essa limitacao de tempo?
+P018;3;Manipulacao de Arquivos;Modo Append;Dificil;(Manipulacao de Arquivos) Ao trabalhar com manipulacao de arquivos em linguagens como C, qual e o efeito principal de abrir um arquivo utilizando o modo 'a' (append / anexar)?

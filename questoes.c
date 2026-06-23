@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <conio.h>
+#include <string.h>
 
 // Cores
 #define RED     "\x1b[31m"
@@ -18,22 +19,21 @@
 #define SETA_BAIXO 80
 #define ENTER 13
 
-#define QTD_FACEIS 4
-#define QTD_MEDIAS 4
-#define QTD_DIFICEIS 4
-#define TOTAL_PERGUNTAS 12
+#define QTD_FACEIS 6
+#define QTD_MEDIAS 6
+#define QTD_DIFICEIS 6
+#define TOTAL_PERGUNTAS 18
 
 void posicionar(int x, int y) {
     printf("\033[%d;%dH", y, x);
 }
 
 // Banco geral de perguntas
-// FACEIS:   indices 0 a 3
-// MEDIAS:   indices 4 a 7
-// DIFICIES: indices 8 a 11
+// As pilhas de jogo sao montadas pelo campo "dificuldade".
+// Assim, novas perguntas podem manter a sequencia de IDs sem depender da posicao no vetor.
 Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
     // =====================================================
-    // FACEIS - indices 0 a 3
+    // FACEIS
     // =====================================================
     {
         1,
@@ -87,7 +87,7 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
     },
 
     // =====================================================
-    // MEDIAS - indices 4 a 7
+    // MEDIAS
     // =====================================================
     {
         5,
@@ -141,7 +141,7 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
     },
 
     // =====================================================
-    // DIFICIES - indices 8 a 11
+    // DIFICIES
     // =====================================================
     {
         9,
@@ -192,6 +192,96 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
             "A insercao no final passa a ser O(n), mesmo com referencia para a cauda."
         },
         2
+    },
+    {
+        13,
+        "3",
+        "Arvore Binaria de Busca",
+        "Percurso em BST",
+        "Facil",
+        "(Arvore Binaria de Busca - BST) Qual metodo de percurso (traversal) em uma Arvore Binaria de Busca deve ser utilizado para visitar/imprimir todos os elementos em ordem estritamente crescente?",
+        {
+            "Pre-ordem (Pre-order).",
+            "Pos-ordem (Post-order).",
+            "Em ordem (In-order).",
+            "Em nivel (Level-order / Busca em Largura)."
+        },
+        2
+    },
+    {
+        14,
+        "3",
+        "Arvores B",
+        "Split",
+        "Facil",
+        "(Arvores B) O que acontece obrigatoriamente em uma Arvore B quando um no atinge sua capacidade maxima de chaves permitidas e uma nova chave precisa ser inserida nele?",
+        {
+            "A arvore e completamente reconstruida a partir do zero em um novo arquivo para acomodar a nova capacidade.",
+            "O no sofre um processo chamado split (divisao), onde e partido em dois, e a chave mediana e promovida para o no pai.",
+            "A nova chave e descartada e a operacao falha, retornando um erro de Arvore Cheia.",
+            "O no se transforma temporariamente em uma lista encadeada para abrigar a chave excedente sem alterar o resto da arvore."
+        },
+        1
+    },
+    {
+        15,
+        "3",
+        "Tabela Hash",
+        "Encadeamento Separado",
+        "Medio",
+        "(Tabela Hash) Qual das alternativas abaixo descreve corretamente o metodo de Encadeamento Separado (Separate Chaining) utilizado para tratar colisoes em uma Tabela Hash?",
+        {
+            "Quando ocorre uma colisao, o elemento procura a proxima posicao vazia no proprio vetor sequencialmente (Sondagem Linear).",
+            "Cada posicao do vetor da tabela hash funciona como um ponteiro para uma lista encadeada, onde todos os elementos que colidiram naquele indice sao armazenados.",
+            "O vetor principal e redimensionado automaticamente para o dobro do tamanho sempre que uma colisao unica acontece.",
+            "Uma segunda funcao de hash e aplicada repetidamente na chave ate encontrar um espaco vazio no vetor original."
+        },
+        1
+    },
+    {
+        16,
+        "3",
+        "Arvores B e B+",
+        "Diferenca entre B e B+",
+        "Medio",
+        "(Arvores B e B+) Ao estudar os conceitos de Arvores B e Arvores B+, qual e a principal caracteristica arquitetural que diferencia de forma vital a Arvore B+ de uma Arvore B tradicional?",
+        {
+            "Na Arvore B+, os nos nao tem um numero maximo de filhos, permitindo uma largura infinita por nivel.",
+            "Na Arvore B+, todos os registros reais ficam apenas nas folhas, e os nos internos guardam apenas chaves de roteamento/guia.",
+            "A Arvore B+ e estritamente binaria, enquanto a Arvore B pode ter multiplos filhos.",
+            "A Arvore B cresce de cima para baixo, enquanto a Arvore B+ cresce inserindo apenas na raiz."
+        },
+        1
+    },
+    {
+        17,
+        "3",
+        "Arvore AVL",
+        "Balanceamento",
+        "Dificil",
+        "(Arvore AVL) Em uma Arvore AVL estritamente balanceada, sabemos que as operacoes sao limitadas no pior caso a O(log n). Qual propriedade exata e permanente da estrutura impoe e garante essa limitacao de tempo?",
+        {
+            "O fato de que todas as subarvores esquerda e direita nao possuem limite de tamanho, desde que haja memoria disponivel no sistema.",
+            "O fator de balanceamento, onde a diferenca de altura entre a subarvore esquerda e direita de qualquer no da arvore nunca ultrapassa o modulo de 1, ou seja, e -1, 0 ou 1.",
+            "A garantia de que, em todos os nos internos, a quantidade exata de descendentes a esquerda e identica a quantidade de descendentes a direita.",
+            "A propriedade de realizar obrigatoriamente quatro rotacoes complexas sempre que um valor for pesquisado e nao for encontrado na raiz."
+        },
+        1
+    },
+    {
+        18,
+        "3",
+        "Manipulacao de Arquivos",
+        "Modo Append",
+        "Dificil",
+        "(Manipulacao de Arquivos) Ao trabalhar com manipulacao de arquivos em linguagens como C, qual e o efeito principal de abrir um arquivo utilizando o modo 'a' (append / anexar)?",
+        {
+            "O arquivo e aberto apenas para leitura, e o ponteiro e posicionado no final dele.",
+            "Ele apaga todo o conteudo anterior do arquivo e comeca a gravar dados novos a partir do inicio.",
+            "Ele abre o arquivo para escrita e adiciona os novos dados no final, preservando o conteudo existente.",
+            "O arquivo e carregado inteiramente para a memoria RAM (vetor) para ser editado no meio de seu conteudo."
+        },
+        2
     }
 };
 
@@ -220,15 +310,33 @@ void embaralhar(int *vetor, int n) {
     }
 }
 
-static void montarPilhaPerguntas(tp_pilha *p, int inicio, int fim) {
-    int indices[4];
+static int questaoPertenceAoNivel(const Questao *questao, NivelPergunta nivel) {
+    if (questao == NULL) {
+        return 0;
+    }
+
+    if (nivel == FACIL) {
+        return strcmp(questao->dificuldade, "Facil") == 0;
+    }
+
+    if (nivel == MEDIO) {
+        return strcmp(questao->dificuldade, "Medio") == 0;
+    }
+
+    return strcmp(questao->dificuldade, "Dificil") == 0;
+}
+
+static void montarPilhaPerguntas(tp_pilha *p, NivelPergunta nivel) {
+    int indices[TOTAL_PERGUNTAS];
     int qtd = 0;
 
     inicializa_pilha(p);
 
-    for (int i = inicio; i <= fim; i++) {
-        indices[qtd] = i;
-        qtd++;
+    for (int i = 0; i < TOTAL_PERGUNTAS; i++) {
+        if (questaoPertenceAoNivel(&bancoPerguntas[i], nivel)) {
+            indices[qtd] = i;
+            qtd++;
+        }
     }
 
     embaralhar(indices, qtd);
@@ -241,9 +349,9 @@ static void montarPilhaPerguntas(tp_pilha *p, int inicio, int fim) {
 void inicializarPilhasPerguntas() {
     inicializarRandomUmaVez();
 
-    montarPilhaPerguntas(&pilhaFacil, 0, 3);
-    montarPilhaPerguntas(&pilhaMedio, 4, 7);
-    montarPilhaPerguntas(&pilhaDificil, 8, 11);
+    montarPilhaPerguntas(&pilhaFacil, FACIL);
+    montarPilhaPerguntas(&pilhaMedio, MEDIO);
+    montarPilhaPerguntas(&pilhaDificil, DIFICIL);
 
     pilhasInicializadas = 1;
 }
@@ -267,13 +375,13 @@ static tp_pilha* selecionarPilhaPorNivel(NivelPergunta nivel) {
 
 static void reembaralharNivel(NivelPergunta nivel) {
     if (nivel == FACIL) {
-        montarPilhaPerguntas(&pilhaFacil, 0, 3);
+        montarPilhaPerguntas(&pilhaFacil, FACIL);
     }
     else if (nivel == MEDIO) {
-        montarPilhaPerguntas(&pilhaMedio, 4, 7);
+        montarPilhaPerguntas(&pilhaMedio, MEDIO);
     }
     else {
-        montarPilhaPerguntas(&pilhaDificil, 8, 11);
+        montarPilhaPerguntas(&pilhaDificil, DIFICIL);
     }
 }
 
@@ -314,17 +422,23 @@ const Questao* obterQuestaoPorIndice(int indice) {
 }
 
 int sortearIndicePerguntaNivel(NivelPergunta nivel) {
+    int indices[TOTAL_PERGUNTAS];
+    int qtd = 0;
+
     inicializarRandomUmaVez();
 
-    if (nivel == FACIL) {
-        return rand() % QTD_FACEIS;
+    for (int i = 0; i < TOTAL_PERGUNTAS; i++) {
+        if (questaoPertenceAoNivel(&bancoPerguntas[i], nivel)) {
+            indices[qtd] = i;
+            qtd++;
+        }
     }
 
-    if (nivel == MEDIO) {
-        return QTD_FACEIS + (rand() % QTD_MEDIAS);
+    if (qtd == 0) {
+        return -1;
     }
 
-    return QTD_FACEIS + QTD_MEDIAS + (rand() % QTD_DIFICEIS);
+    return indices[rand() % qtd];
 }
 
 int quantidadePerguntasRestantesNivel(NivelPergunta nivel) {
@@ -547,25 +661,9 @@ void QuestoesJogo() {
     inicializa_pilha(&m);
     inicializa_pilha(&d);
 
-    int iF[] = {0, 1, 2, 3};
-    int iM[] = {4, 5, 6, 7};
-    int iD[] = {8, 9, 10, 11};
-
-    embaralhar(iF, 4);
-    embaralhar(iM, 4);
-    embaralhar(iD, 4);
-
-    for (int i = 0; i < 4; i++) {
-        push(&f, iF[i]);
-    }
-
-    for (int i = 0; i < 4; i++) {
-        push(&m, iM[i]);
-    }
-
-    for (int i = 0; i < 4; i++) {
-        push(&d, iD[i]);
-    }
+    montarPilhaPerguntas(&f, FACIL);
+    montarPilhaPerguntas(&m, MEDIO);
+    montarPilhaPerguntas(&d, DIFICIL);
 
     int selecionado = 1;
     int tecla = 0;
