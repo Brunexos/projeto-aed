@@ -105,8 +105,13 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
         "Ponteiros",
         "Ponteiro para ponteiro",
         "Medio",
-        "O que int **p armazena?",
-        {"Valor comum", "Endereco de ponteiro", "Texto", "Erro sempre"},
+        "Em C, considerando a declaracao int **p, o que a variavel p armazena?",
+        {
+            "Um valor inteiro comum.",
+            "O endereco de uma variavel do tipo int *.",
+            "Um texto armazenado em uma string.",
+            "Uma funcao que retorna int."
+        },
         1
     },
     {
@@ -149,8 +154,8 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
         "Ponteiros",
         "Ponteiro para funcao",
         "Dificil",
-        "Sintaxe correta de ponteiro para funcao?",
-        {"void *f(int);", "void (*ptr)(int);", "func ptr(int);", "void ptr(int)*;"},
+        "Qual declaracao cria um ponteiro para uma funcao que recebe int e retorna void?",
+        {"void *ptr(int);", "void (*ptr)(int);", "func ptr(int);", "void ptr(int)*;"},
         1
     },
     {

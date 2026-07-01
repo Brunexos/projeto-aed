@@ -4,10 +4,10 @@ P002;1;Pilha;LIFO;Facil;Elemento sai de onde na pilha?
 P003;2;Lista Encadeada;Estrutura do no;Facil;Qual e a principal caracteristica de uma lista simplesmente encadeada?
 P004;2;Lista Duplamente Encadeada;Ponteiro anterior;Facil;Em uma lista duplamente encadeada padrao, para onde aponta o ponteiro anterior do primeiro no?
 P005;1;Pilha;Topo;Medio;Qual o valor do topo inicial de uma pilha vazia?
-P006;1;Ponteiros;Ponteiro para ponteiro;Medio;O que int **p armazena?
+P006;1;Ponteiros;Ponteiro para ponteiro;Medio;Em C, considerando a declaracao int **p, o que a variavel p armazena?
 P007;2;Lista Encadeada;Insercao no inicio;Medio;Qual e a complexidade para inserir um no no inicio de uma lista simplesmente encadeada, tendo referencia para a cabeca?
 P008;2;Lista Duplamente Encadeada;Remocao;Medio;Ao remover um no do meio de uma lista duplamente encadeada, quantos ponteiros de nos vizinhos precisam ser alterados?
-P009;1;Ponteiros;Ponteiro para funcao;Dificil;Sintaxe correta de ponteiro para funcao?
+P009;1;Ponteiros;Ponteiro para funcao;Dificil;Qual declaracao cria um ponteiro para uma funcao que recebe int e retorna void?
 P010;1;Pilha;Overflow;Dificil;Push em pilha cheia gera?
 P011;2;Lista Encadeada;Ciclo;Dificil;O algoritmo de Floyd, tambem chamado de ponteiro rapido e lento, e usado principalmente para:
 P012;2;Lista Duplamente Encadeada;Memoria;Dificil;Comparando com listas simplesmente encadeadas, qual e a principal desvantagem das listas duplamente encadeadas?

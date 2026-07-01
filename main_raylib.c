@@ -717,11 +717,11 @@ static void DrawIntro(IntroGUI *intro) {
         "Os alunos sao desafiados pelo Lorde Soussa",
         "a completarem o tabuleiro e responderem as perguntas.",
         "",
-        "Cuidado com o Edag e que a força esteja com voce.",
+        "Cuidado com o Edag e que a forca esteja com voce.",
         "",
         "Boa sorte a todos."
     };
-    const int totalLinhasIntro = 6;
+    const int totalLinhasIntro = (int)(sizeof(linhasIntro) / sizeof(linhasIntro[0]));
 
     if (intro != NULL) {
         for (int i = 0; i < INTRO_PARTICULAS; i++) {
