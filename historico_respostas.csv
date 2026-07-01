@@ -1,1 +1,9 @@
 turma;grupo;nome_jogador;id_pergunta;unidade;tema;subtema;dificuldade;resposta_jogador;resposta_correta;resultado
+AED;2026.1 AED;bruno;P010;1;Pilha;Overflow;Dificil;B;B;Acertou
+AED;2026.1 AED;rafael;P018;3;Manipulacao de Arquivos;Modo Append;Dificil;C;C;Acertou
+AED;2026.1 AED;cardivo;P011;2;Lista Encadeada;Ciclo;Dificil;C;A;Errou
+AED;2026.1 AED;bruno;P009;1;Ponteiros;Ponteiro para funcao;Dificil;D;B;Errou
+AED;2026.1 AED;cardivo;P012;2;Lista Duplamente Encadeada;Memoria;Dificil;C;C;Acertou
+AED;2026.1 AED;cardivo;P021;3;Tabela Hash;Fator de carga;Dificil;B;B;Acertou
+AED;2026.1 AED;bruno;P017;3;Arvore AVL;Balanceamento;Dificil;C;B;Errou
+AED;2026.1 AED;bruno;P020;2;Lista Encadeada;Busca sequencial;Medio;C;C;Acertou
