@@ -19,10 +19,10 @@
 #define SETA_BAIXO 80
 #define ENTER 13
 
-#define QTD_FACEIS 6
-#define QTD_MEDIAS 6
-#define QTD_DIFICEIS 6
-#define TOTAL_PERGUNTAS 18
+#define QTD_FACEIS 7
+#define QTD_MEDIAS 7
+#define QTD_DIFICEIS 7
+#define TOTAL_PERGUNTAS 21
 
 void posicionar(int x, int y) {
     printf("\033[%d;%dH", y, x);
@@ -282,6 +282,51 @@ Questao bancoPerguntas[TOTAL_PERGUNTAS] = {
             "O arquivo e carregado inteiramente para a memoria RAM (vetor) para ser editado no meio de seu conteudo."
         },
         2
+    },
+    {
+        19,
+        "1",
+        "Pilha",
+        "Operacao pop",
+        "Facil",
+        "(Pilha) Em uma estrutura de dados do tipo pilha, qual operacao e responsavel por remover o elemento que esta no topo?",
+        {
+            "Push.",
+            "Pop.",
+            "Enqueue.",
+            "Search."
+        },
+        1
+    },
+    {
+        20,
+        "2",
+        "Lista Encadeada",
+        "Busca sequencial",
+        "Medio",
+        "(Lista Encadeada) Em uma lista simplesmente encadeada, qual e a complexidade no pior caso para buscar um valor que pode estar em qualquer posicao da lista?",
+        {
+            "O(1).",
+            "O(log n).",
+            "O(n).",
+            "O(n^2)."
+        },
+        2
+    },
+    {
+        21,
+        "3",
+        "Tabela Hash",
+        "Fator de carga",
+        "Dificil",
+        "(Tabela Hash) O que normalmente acontece quando o fator de carga de uma tabela hash fica muito alto?",
+        {
+            "As buscas passam a ser sempre O(1), pois existem mais elementos armazenados.",
+            "A quantidade de colisoes tende a aumentar, podendo prejudicar o desempenho das operacoes.",
+            "A tabela passa automaticamente a funcionar como uma Arvore AVL.",
+            "As chaves deixam de precisar de uma funcao hash."
+        },
+        1
     }
 };
 

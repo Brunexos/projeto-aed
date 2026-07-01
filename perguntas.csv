@@ -17,3 +17,6 @@ P015;3;Tabela Hash;Encadeamento Separado;Medio;(Tabela Hash) Qual das alternativ
 P016;3;Arvores B e B+;Diferenca entre B e B+;Medio;(Arvores B e B+) Ao estudar os conceitos de Arvores B e Arvores B+, qual e a principal caracteristica arquitetural que diferencia de forma vital a Arvore B+ de uma Arvore B tradicional?
 P017;3;Arvore AVL;Balanceamento;Dificil;(Arvore AVL) Em uma Arvore AVL estritamente balanceada, sabemos que as operacoes sao limitadas no pior caso a O(log n). Qual propriedade exata e permanente da estrutura impoe e garante essa limitacao de tempo?
 P018;3;Manipulacao de Arquivos;Modo Append;Dificil;(Manipulacao de Arquivos) Ao trabalhar com manipulacao de arquivos em linguagens como C, qual e o efeito principal de abrir um arquivo utilizando o modo 'a' (append / anexar)?
+P019;1;Pilha;Operacao pop;Facil;(Pilha) Em uma estrutura de dados do tipo pilha, qual operacao e responsavel por remover o elemento que esta no topo?
+P020;2;Lista Encadeada;Busca sequencial;Medio;(Lista Encadeada) Em uma lista simplesmente encadeada, qual e a complexidade no pior caso para buscar um valor que pode estar em qualquer posicao da lista?
+P021;3;Tabela Hash;Fator de carga;Dificil;(Tabela Hash) O que normalmente acontece quando o fator de carga de uma tabela hash fica muito alto?

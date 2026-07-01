@@ -28,6 +28,7 @@
 #define INTRO_PARTICULAS 240
 #define INTRO_DURACAO 15.5f
 #define INTRO_AUDIO_FADE_DURACAO 5.0f
+#define GRUPO_HISTORICO_FIXO "2026.1 AED"
 
 typedef enum {
     TELA_INTRO,
@@ -1660,7 +1661,7 @@ static void desenharTelaMenu(TelaGUI *telaAtual, Texture2D *patoMenu) {
     }
 
     if (botaoClicado(iniciar)) {
-        *telaAtual = TELA_GRUPO;
+        *telaAtual = TELA_CADASTRO;
     }
 
     if (botaoClicado(ranking)) {
@@ -1722,7 +1723,7 @@ int main(void) {
     int indiceVencedor = -1;
     int dadoAtual = 0;
     int jogoFinalizado = 0;
-    char grupoHistorico[30] = "2026.1";
+    char grupoHistorico[30] = GRUPO_HISTORICO_FIXO;
     char nomeDigitado[50] = "";
     char mensagem[180] = "Clique em Rolar dado para jogar.";
     NoCasa *arvoreQuedas = NULL;
